@@ -52,7 +52,7 @@ namespace Ogre
     struct _OgreExport BasicBlock
     {
         void        *mRsData;       /// Render-System specific data
-        uint16      mRefCount;
+        uint32      mRefCount;
         /// The mId is only valid while mRefCount > 0; which means mRsData
         /// may contain valid data, else it's null.
         uint16      mId;

@@ -212,7 +212,7 @@ namespace Ogre
         if( !retVal->mRefCount )
             mRenderSystem->_hlmsMacroblockCreated( retVal );
 
-        OGRE_ASSERT_LOW( retVal->mRefCount < 0xFFFF && "Reference count overflow!" );
+        OGRE_ASSERT_LOW( retVal->mRefCount < 0xFFFFFFFF && "Reference count overflow!" );
         ++retVal->mRefCount;
 
         return retVal;
@@ -260,7 +260,7 @@ namespace Ogre
             mRenderSystem->_hlmsBlendblockCreated( retVal );
         }
 
-        OGRE_ASSERT_LOW( retVal->mRefCount < 0xFFFF && "Reference count overflow!" );
+        OGRE_ASSERT_LOW( retVal->mRefCount < 0xFFFFFFFF && "Reference count overflow!" );
         ++retVal->mRefCount;
 
         return retVal;
@@ -341,7 +341,7 @@ namespace Ogre
             retVal = &mSamplerblocks[idx];
         }
 
-        assert( retVal->mRefCount < 0xFFFF && "Reference count overflow!" );
+        assert( retVal->mRefCount < 0xFFFFFFFF && "Reference count overflow!" );
         ++retVal->mRefCount;
 
         return retVal;
