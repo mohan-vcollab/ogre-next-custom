@@ -97,10 +97,14 @@ if(WIN32)
 		PATH_SUFFIXES "" Release RelWithDebInfo MinSizeRel
 		)
 	find_library(Vulkan_SHADERC_LIB_DBG
-		NAMES shaderc_combined
+		NAMES shaderc_combinedd
 		HINTS
 			"${OGRE_DEPENDENCIES_DIR}/lib" "${ENV_OGRE_DEPENDENCIES_DIR}/lib"
 			"${OGRE_SOURCE}/Dependencies/lib"
+			"${OGRE_VULKAN_SDK}/${VK_LIB}"
+			"${OGRE_VULKAN_SDK}/${VK_BIN}"
+			"$ENV{VULKAN_SDK}/${VK_LIB}"
+			"$ENV{VULKAN_SDK}/${VK_BIN}"
 		PATH_SUFFIXES "" Debug
 		)
 	find_program(Vulkan_GLSLC_EXECUTABLE
