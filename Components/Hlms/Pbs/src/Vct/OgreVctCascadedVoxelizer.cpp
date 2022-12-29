@@ -62,9 +62,10 @@ namespace Ogre
         }
     }
     //-------------------------------------------------------------------------
-    Vector3 VctCascadeSetting::getVoxelCellSize( void ) const
+    Vector3 VctCascadeSetting::getVoxelCellSize() const
     {
-        return 2.0f * this->areaHalfSize / Vector3( resolution[0], resolution[1], resolution[2] );
+        return 2.0f * this->areaHalfSize /
+               Vector3( (Real)resolution[0], (Real)resolution[1], (Real)resolution[2] );
     }
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
@@ -151,8 +152,9 @@ namespace Ogre
             mCascadeSettings[i].cameraStepSize.z = std::ceil( mCascadeSettings[i].cameraStepSize.z );
             mCascadeSettings[i].cameraStepSize.makeCeil( Vector3::UNIT_SCALE );
 
-            Ogre::Vector3 res( mCascadeSettings[i].resolution[0], mCascadeSettings[i].resolution[1],
-                               mCascadeSettings[i].resolution[2] );
+            Ogre::Vector3 res( (Real)mCascadeSettings[i].resolution[0],
+                               (Real)mCascadeSettings[i].resolution[1],
+                               (Real)mCascadeSettings[i].resolution[2] );
             // Step size should be <= resolution / 2 (it must be <= resolution;
             // but we use half to avoid potential glitches / distortion)
             mCascadeSettings[i].cameraStepSize.makeFloor( res * 0.5f );
@@ -179,9 +181,9 @@ namespace Ogre
     inline Vector3 quantToVec3( const Grid3D position, const Vector3 voxelCellSize )
     {
         Vector3 retVal;
-        retVal.x = position.x * voxelCellSize.x;
-        retVal.y = position.y * voxelCellSize.y;
-        retVal.z = position.z * voxelCellSize.z;
+        retVal.x = Real( position.x ) * voxelCellSize.x;
+        retVal.y = Real( position.y ) * voxelCellSize.y;
+        retVal.z = Real( position.z ) * voxelCellSize.z;
 
         return retVal;
     }
@@ -282,7 +284,7 @@ namespace Ogre
         }
     }
     //-------------------------------------------------------------------------
-    void VctCascadedVoxelizer::allWorkspacesBeforeBeginUpdate( void ) { update( mSceneManager ); }
+    void VctCascadedVoxelizer::allWorkspacesBeforeBeginUpdate() { update( mSceneManager ); }
     //-------------------------------------------------------------------------
     void VctCascadedVoxelizer::removeAllItems()
     {
@@ -404,9 +406,9 @@ namespace Ogre
             const Grid3D newPos = quantizePosition( mCameraPosition, voxelCellSize );
             const Grid3D oldPos = quantizePosition( cascade.lastCameraPosition, voxelCellSize );
 
-            return abs( newPos.x - oldPos.x ) >= cascade.cameraStepSize.x ||  //
-                   abs( newPos.y - oldPos.y ) >= cascade.cameraStepSize.y ||  //
-                   abs( newPos.z - oldPos.z ) >= cascade.cameraStepSize.z;
+            return Real( abs( newPos.x - oldPos.x ) ) >= cascade.cameraStepSize.x ||  //
+                   Real( abs( newPos.y - oldPos.y ) ) >= cascade.cameraStepSize.y ||  //
+                   Real( abs( newPos.z - oldPos.z ) ) >= cascade.cameraStepSize.z;
         }
     }
     //-------------------------------------------------------------------------
@@ -483,9 +485,10 @@ namespace Ogre
                 //      2. De-amplify cascade i + 1 when we have enough lighting information
                 //         accumulated (via 1.0 - result.alpha). Done in shader
                 const uint32 numBounces =
-                    mNumBounces == 0u ? 0u
-                                      : static_cast<uint32>( roundf(
-                                            std::sqrt( ( ( mNumBounces + 1u ) * factor ) - 1.0f ) ) );
+                    mNumBounces == 0u
+                        ? 0u
+                        : static_cast<uint32>(
+                              roundf( std::sqrt( ( Real( mNumBounces + 1u ) * factor ) - 1.0f ) ) );
 
                 mCascades[i]->update( sceneManager, numBounces, cascade.thinWallCounter,
                                       cascade.bAutoMultiplier, cascade.rayMarchStepScale,

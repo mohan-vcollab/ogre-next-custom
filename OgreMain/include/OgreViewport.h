@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -29,17 +29,20 @@ THE SOFTWARE.
 #define __Viewport_H__
 
 #include "OgrePrerequisites.h"
+
 #include "OgreCommon.h"
 #include "OgreFrustum.h"
+
 #include "OgreHeaderPrefix.h"
 
-namespace Ogre {
+namespace Ogre
+{
     /** \addtogroup Core
-    *  @{
-    */
+     *  @{
+     */
     /** \addtogroup RenderSystem
-    *  @{
-    */
+     *  @{
+     */
 
     /** An abstraction of a viewport, i.e. a rendering region on a render
         target.
@@ -54,7 +57,7 @@ namespace Ogre {
             viewport on a single render target and they overlap, one must
             obscure the other in some predetermined way.
     */
-    class _OgreExport Viewport : public ViewportAlloc
+    class _OgreExport Viewport : public OgreAllocatedObj
     {
     public:
         /// @copydoc MovableObject::mGlobalIndex
@@ -75,13 +78,11 @@ namespace Ogre {
                 Relative Z-order on the target. Lower = further to
                 the front.
         */
-        Viewport(
-            Real left, Real top,
-            Real width, Real height );
+        Viewport( Real left, Real top, Real width, Real height );
         Viewport();
 
         /** Default destructor.
-        */
+         */
         virtual ~Viewport();
 
         /** Notifies the viewport of a possible change in dimensions.
@@ -91,66 +92,68 @@ namespace Ogre {
             @note
                 Internal use by Ogre only.
         */
-        void _updateDimensions(void);
+        void _updateDimensions();
+
+        void _setupAspectRatio( Camera *cullCamera );
 
         /** Instructs the viewport to updates its contents.
-        */
-        void _updateCullPhase01( Camera* renderCamera, Camera *cullCamera, const Camera *lodCamera,
+         */
+        void _updateCullPhase01( Camera *renderCamera, Camera *cullCamera, const Camera *lodCamera,
                                  uint8 firstRq, uint8 lastRq, bool reuseCullData );
-        void _updateRenderPhase02( Camera* camera, const Camera *lodCamera,
-                                   uint8 firstRq, uint8 lastRq );
+        void _updateRenderPhase02( Camera *camera, const Camera *lodCamera, uint8 firstRq,
+                                   uint8 lastRq );
 
         /** Gets one of the relative dimensions of the viewport,
             a value between 0.0 and 1.0.
         */
-        Real getLeft(void) const;
+        Real getLeft() const;
 
         /** Gets one of the relative dimensions of the viewport, a value
             between 0.0 and 1.0.
         */
-        Real getTop(void) const;
+        Real getTop() const;
 
         /** Gets one of the relative dimensions of the viewport, a value
             between 0.0 and 1.0.
         */
 
-        Real getWidth(void) const;
+        Real getWidth() const;
         /** Gets one of the relative dimensions of the viewport, a value
             between 0.0 and 1.0.
         */
 
-        Real getHeight(void) const;
+        Real getHeight() const;
         /** Gets one of the actual dimensions of the viewport, a value in
             pixels.
         */
 
-        int getActualLeft(void) const;
+        int getActualLeft() const;
         /** Gets one of the actual dimensions of the viewport, a value in
             pixels.
         */
 
-        int getActualTop(void) const;
+        int getActualTop() const;
         /** Gets one of the actual dimensions of the viewport, a value in
             pixels.
         */
-        int getActualWidth(void) const;
+        int getActualWidth() const;
         /** Gets one of the actual dimensions of the viewport, a value in
             pixels.
         */
-        int getActualHeight(void) const;
+        int getActualHeight() const;
 
-        Real getScissorLeft(void) const                 { return mScissorRelLeft; }
-        Real getScissorTop(void) const                  { return mScissorRelTop; }
-        Real getScissorWidth(void) const                { return mScissorRelWidth; }
-        Real getScissorHeight(void) const               { return mScissorRelHeight; }
+        Real getScissorLeft() const { return mScissorRelLeft; }
+        Real getScissorTop() const { return mScissorRelTop; }
+        Real getScissorWidth() const { return mScissorRelWidth; }
+        Real getScissorHeight() const { return mScissorRelHeight; }
 
-        int getScissorActualLeft(void) const            { return mScissorActLeft; }
-        int getScissorActualTop(void) const             { return mScissorActTop; }
-        int getScissorActualWidth(void) const           { return mScissorActWidth; }
-        int getScissorActualHeight(void) const          { return mScissorActHeight; }
+        int getScissorActualLeft() const { return mScissorActLeft; }
+        int getScissorActualTop() const { return mScissorActTop; }
+        int getScissorActualWidth() const { return mScissorActWidth; }
+        int getScissorActualHeight() const { return mScissorActHeight; }
 
-        bool coversEntireTarget(void) const;
-        bool scissorsMatchViewport(void) const;
+        bool coversEntireTarget() const;
+        bool scissorsMatchViewport() const;
 
         /** Sets the dimensions (after creation).
         @param left
@@ -163,21 +166,23 @@ namespace Ogre {
             Height of the viewport.
         @param overrideScissors
             When true, the scissor dimensions will be the same as the viewport's
-            @See setScissors
+            @see setScissors
         @note
             Dimensions relative to the size of the target, represented as real values
             between 0 and 1. i.e. the full target area is 0, 0, 1, 1.
         */
-        void setDimensions( TextureGpu *newTarget, const Vector4 &relativeVp,
-                            const Vector4 &scissors, uint8 mipLevel );
+        void setDimensions( TextureGpu *newTarget, const Vector4 &relativeVp, const Vector4 &scissors,
+                            uint8 mipLevel );
 
-        TextureGpu* getCurrentTarget(void) const        { return mCurrentTarget; }
+        TextureGpu *getCurrentTarget() const { return mCurrentTarget; }
+
+        uint8 getCurrentMip() const { return mCurrentMip; }
 
         /** Only sets the scissor regions. The scissor rectangle must be fully inside
-            the viewport rectangle. @See setDimensions for param description
+            the viewport rectangle. See setDimensions() for param description
         @remarks
             Only the scissor rect is set here; but the HLMS macroblock controls whether
-            scissor testing is enabled or not (@See HlmsMacroblock). On some RenderSystem
+            scissor testing is enabled or not (See HlmsMacroblock). On some RenderSystem
             implementations (i.e. OpenGL), scissor testing needs to be enabled when
             clearing a region of the screen. In those cases, if scissor testing is disabled at
             the time of the clear, scissor testing will be temporarily enabled and then disabled.
@@ -187,25 +192,22 @@ namespace Ogre {
         /** Set the material scheme which the viewport should use.
         @remarks
             This allows you to tell the system to use a particular
-            material scheme when rendering this viewport, which can 
+            material scheme when rendering this viewport, which can
             involve using different techniques to render your materials.
         @see Technique::setSchemeName
         */
-        void setMaterialScheme(const String& schemeName)
-        { mMaterialSchemeName = schemeName; }
-        
+        void setMaterialScheme( const String &schemeName ) { mMaterialSchemeName = schemeName; }
+
         /** Get the material scheme which the viewport should use.
-        */
-        const String& getMaterialScheme(void) const
-        { return mMaterialSchemeName; }
+         */
+        const String &getMaterialScheme() const { return mMaterialSchemeName; }
 
         /** Access to actual dimensions (based on target size).
-        */
-        void getActualDimensions(
-            int &left, int &top, int &width, int &height ) const;
+         */
+        void getActualDimensions( int &left, int &top, int &width, int &height ) const;
 
-        bool _isUpdated(void) const;
-        void _clearUpdatedFlag(void);
+        bool _isUpdated() const;
+        void _clearUpdatedFlag();
 
         /** Tells this viewport whether it should display Overlay objects.
         @remarks
@@ -217,17 +219,17 @@ namespace Ogre {
             by calling this method.
         @param enabled If true, any overlays are displayed, if false they are not.
         */
-        void setOverlaysEnabled(bool enabled);
+        void setOverlaysEnabled( bool enabled );
 
         /** Returns whether or not Overlay objects (created in the SceneManager) are displayed in this
             viewport. */
-        bool getOverlaysEnabled(void) const;
+        bool getOverlaysEnabled() const;
 
         /** Sets a per-viewport visibility mask.
         @remarks
             The visibility mask is a way to exclude objects from rendering for
             a given viewport. For each object in the frustum, a check is made
-            between this mask and the objects visibility flags 
+            between this mask and the objects visibility flags
             (@see MovableObject::setVisibilityFlags), and if a binary 'and'
             returns zero, the object will not be rendered.
         @par
@@ -239,13 +241,13 @@ namespace Ogre {
         /** Gets a per-viewport visibility mask.
         @see Viewport::setVisibilityMask
         */
-        uint32 getVisibilityMask(void) const        { return mVisibilityMask; }
-        uint32 getLightVisibilityMask(void) const   { return mLightVisibilityMask; }
+        uint32 getVisibilityMask() const { return mVisibilityMask; }
+        uint32 getLightVisibilityMask() const { return mLightVisibilityMask; }
 
         /** Convert oriented input point coordinates to screen coordinates. */
-        void pointOrientedToScreen(const Vector2 &v, int orientationMode, Vector2 &outv);
-        void pointOrientedToScreen(Real orientedX, Real orientedY, int orientationMode,
-                                   Real &screenX, Real &screenY);
+        void pointOrientedToScreen( const Vector2 &v, int orientationMode, Vector2 &outv );
+        void pointOrientedToScreen( Real orientedX, Real orientedY, int orientationMode, Real &screenX,
+                                    Real &screenY );
 
         /** Sets the draw buffer type for the next frame.
         @remarks
@@ -258,7 +260,7 @@ namespace Ogre {
             buffer Specifies the particular buffer that will be
             targeted by the render target.
         */
-        void setDrawBuffer(ColourBufferType colourBuffer);
+        void setDrawBuffer( ColourBufferType colourBuffer );
 
         /** Returns the current colour buffer type for this viewport.*/
         ColourBufferType getDrawBuffer() const;
@@ -275,25 +277,25 @@ namespace Ogre {
         /// Relative dimensions, irrespective of target dimensions (0..1), scissor rect
         float mScissorRelLeft, mScissorRelTop, mScissorRelWidth, mScissorRelHeight;
         /// Actual dimensions, based on target dimensions, scissor rect
-        int mScissorActLeft, mScissorActTop, mScissorActWidth, mScissorActHeight;
+        int  mScissorActLeft, mScissorActTop, mScissorActWidth, mScissorActHeight;
         bool mCoversEntireTarget;
         bool mScissorsMatchViewport;
 
         /// Z-order
         int mZOrder;
         /// Background options
-        bool mUpdated;
-        bool mShowOverlays;
+        bool   mUpdated;
+        bool   mShowOverlays;
         uint32 mVisibilityMask;
         uint32 mLightVisibilityMask;
         /// Material scheme
-        String mMaterialSchemeName;
+        String           mMaterialSchemeName;
         ColourBufferType mColourBuffer;
     };
     /** @} */
     /** @} */
 
-}
+}  // namespace Ogre
 
 #include "OgreHeaderSuffix.h"
 

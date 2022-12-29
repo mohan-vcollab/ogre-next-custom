@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
 (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -49,9 +49,9 @@ namespace Ogre
         bool mIsExternalGLControl;
 
         EGLGLSupport *mGLSupport;
-        EGLContext *mContext;
+        EGLContext   *mContext;
 
-        EGLConfig mEglConfig;
+        EGLConfig  mEglConfig;
         EGLSurface mEglSurface;
 
         void switchFullScreen( bool fullscreen );
@@ -73,30 +73,30 @@ namespace Ogre
                                       uint32 width, uint32 height, uint32 frequencyNumerator,
                                       uint32 frequencyDenominator );
 
-        /** @copydoc see RenderWindow::destroy */
-        virtual void destroy( void );
+        /** @copydoc Window::destroy */
+        virtual void destroy();
 
-        /** @copydoc see RenderWindow::isClosed */
-        virtual bool isClosed( void ) const;
+        /** @copydoc Window::isClosed */
+        virtual bool isClosed() const;
 
-        /** @copydoc see RenderWindow::isVisible */
-        bool isVisible( void ) const;
+        /** @copydoc Window::isVisible */
+        bool isVisible() const;
 
         virtual void _setVisible( bool visible );
 
-        /** @copydoc see RenderWindow::isHidden */
-        bool isHidden( void ) const { return mHidden; }
+        /** @copydoc Window::isHidden */
+        bool isHidden() const { return mHidden; }
 
-        /** @copydoc see RenderWindow::setHidden */
+        /** @copydoc Window::setHidden */
         void setHidden( bool hidden );
 
-        /** @copydoc see RenderWindow::resize */
+        /** @copydoc Window::requestResolution */
         void requestResolution( uint32 width, uint32 height );
 
-        /** @copydoc see RenderWindow::windowMovedOrResized */
+        /** @copydoc Window::windowMovedOrResized */
         void windowMovedOrResized();
 
-        /** @copydoc see RenderWindow::swapBuffers */
+        /** @copydoc Window::swapBuffers */
         void swapBuffers();
 
         /**

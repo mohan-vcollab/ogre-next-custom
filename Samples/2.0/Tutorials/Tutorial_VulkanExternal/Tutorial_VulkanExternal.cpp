@@ -3,6 +3,7 @@
 // See README.md
 //-----------------------------------------------------------------------------
 
+#include "OgreAbiUtils.h"
 #include "OgreArchiveManager.h"
 #include "OgreCamera.h"
 #include "OgreConfigFile.h"
@@ -396,7 +397,9 @@ int main( int /*argc*/, const char * /*argv*/[] )
 #else
     const char *pluginsFile = 0;  // TODO
 #endif
-    Root *root = OGRE_NEW Root( "",                              //
+    const Ogre::AbiCookie abiCookie = Ogre::generateAbiCookie();
+    Root *root = OGRE_NEW Root( &abiCookie,                      //
+                                "",                              //
                                 writeAccessFolder + "ogre.cfg",  //
                                 writeAccessFolder + "Ogre.log" );
 

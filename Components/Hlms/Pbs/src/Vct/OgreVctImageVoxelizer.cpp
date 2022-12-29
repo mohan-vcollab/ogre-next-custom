@@ -88,7 +88,7 @@ namespace Ogre
         destroyVoxelTextures();
     }
     //-------------------------------------------------------------------------
-    void VctImageVoxelizer::createComputeJobs( void )
+    void VctImageVoxelizer::createComputeJobs()
     {
         HlmsCompute *hlmsCompute = mHlmsManager->getComputeHlms();
 #if OGRE_NO_JSON
@@ -230,14 +230,14 @@ namespace Ogre
         mFullBuildDone = false;
     }
     //-------------------------------------------------------------------------
-    void VctImageVoxelizer::removeAllItems( void )
+    void VctImageVoxelizer::removeAllItems()
     {
         mItems.clear();
         mItemOrderDirty = false;
         mFullBuildDone = false;
     }
     //-------------------------------------------------------------------------
-    void VctImageVoxelizer::restoreSwappedVoxelTextures( void )
+    void VctImageVoxelizer::restoreSwappedVoxelTextures()
     {
         if( mAlbedoVox && mAlbedoVoxAlt )
         {
@@ -252,7 +252,7 @@ namespace Ogre
         }
     }
     //-------------------------------------------------------------------------
-    void VctImageVoxelizer::createVoxelTextures( void )
+    void VctImageVoxelizer::createVoxelTextures()
     {
         if( mAlbedoVox )
         {
@@ -275,7 +275,7 @@ namespace Ogre
                 "VctImageVoxelizer" + StringConverter::toString( getId() ) + "/Albedo",
                 GpuPageOutStrategy::Discard, texFlags, TextureTypes::Type3D );
 
-            texFlags &= ~( uint32 )( TextureFlags::RenderToTexture | TextureFlags::AllowAutomipmaps );
+            texFlags &= ~(uint32)( TextureFlags::RenderToTexture | TextureFlags::AllowAutomipmaps );
 
             mEmissiveVox = mTextureGpuManager->createTexture(
                 "VctImageVoxelizer" + StringConverter::toString( getId() ) + "/Emissive",
@@ -313,7 +313,7 @@ namespace Ogre
         }
     }
     //-------------------------------------------------------------------------
-    void VctImageVoxelizer::createAltVoxelTextures( void )
+    void VctImageVoxelizer::createAltVoxelTextures()
     {
         if( mAlbedoVoxAlt )
             return;
@@ -331,7 +331,7 @@ namespace Ogre
             "VctImageVoxelizer" + StringConverter::toString( getId() ) + "/AlbedoALT",
             GpuPageOutStrategy::Discard, texFlags, TextureTypes::Type3D );
 
-        texFlags &= ~( uint32 )( TextureFlags::RenderToTexture | TextureFlags::AllowAutomipmaps );
+        texFlags &= ~(uint32)( TextureFlags::RenderToTexture | TextureFlags::AllowAutomipmaps );
 
         mEmissiveVoxAlt = mTextureGpuManager->createTexture(
             "VctImageVoxelizer" + StringConverter::toString( getId() ) + "/EmissiveALT",
@@ -349,7 +349,7 @@ namespace Ogre
         mNormalVoxAlt->scheduleTransitionTo( GpuResidency::Resident );
     }
     //-------------------------------------------------------------------------
-    void VctImageVoxelizer::setVoxelTexturesToJobs( void )
+    void VctImageVoxelizer::setVoxelTexturesToJobs()
     {
         if( mDebugVoxelVisualizer )
         {
@@ -392,7 +392,7 @@ namespace Ogre
         mImageVoxelizerJob->_setUavTexture( 3u, uavSlot );
     }
     //-------------------------------------------------------------------------
-    void VctImageVoxelizer::destroyVoxelTextures( void )
+    void VctImageVoxelizer::destroyVoxelTextures()
     {
         if( mAlbedoVoxAlt )
         {
@@ -408,7 +408,7 @@ namespace Ogre
         VctVoxelizerSourceBase::destroyVoxelTextures();
     }
     //-------------------------------------------------------------------------
-    void VctImageVoxelizer::createInstanceBuffers( void )
+    void VctImageVoxelizer::createInstanceBuffers()
     {
         const size_t structStride = sizeof( float ) * 4u * 5u;
         const size_t elementCount = mItems.size() * mOctants.size();
@@ -428,7 +428,7 @@ namespace Ogre
         mImageVoxelizerJob->setTexBuffer( 0u, bufferSlot );
     }
     //-------------------------------------------------------------------------
-    void VctImageVoxelizer::destroyInstanceBuffers( void )
+    void VctImageVoxelizer::destroyInstanceBuffers()
     {
         if( mInstanceBuffer )
         {
@@ -528,9 +528,9 @@ namespace Ogre
                 mBatches.back().textures.push_back( cacheEntry.normalVox );
                 mBatches.back().textures.push_back( cacheEntry.emissiveVox );
 
-                meshResolution =
-                    Vector3( cacheEntry.albedoVox->getWidth(), cacheEntry.albedoVox->getHeight(),
-                             cacheEntry.albedoVox->getDepthOrSlices() );
+                meshResolution = Vector3( (Real)cacheEntry.albedoVox->getWidth(),
+                                          (Real)cacheEntry.albedoVox->getHeight(),
+                                          (Real)cacheEntry.albedoVox->getDepthOrSlices() );
             }
 
             const Vector3 invMeshCellSize = meshResolution / worldAabb.getSize();
@@ -671,7 +671,8 @@ namespace Ogre
 
         const Vector3 voxelOrigin = mRegionToVoxelize.getMinimum();
         const Vector3 octantCellSize =
-            mRegionToVoxelize.getSize() / Vector3( numOctantsX, numOctantsY, numOctantsZ );
+            mRegionToVoxelize.getSize() /
+            Vector3( (Real)numOctantsX, (Real)numOctantsY, (Real)numOctantsZ );
 
         for( uint32 x = 0u; x < numOctantsX; ++x )
         {
@@ -683,7 +684,7 @@ namespace Ogre
                 {
                     octant.z = z * octant.depth;
 
-                    Vector3 octantOrigin = Vector3( x, y, z ) * octantCellSize;
+                    Vector3 octantOrigin = Vector3( (Real)x, (Real)y, (Real)z ) * octantCellSize;
                     octantOrigin += voxelOrigin;
                     octant.region.setExtents( octantOrigin, octantOrigin + octantCellSize );
                     mOctants.push_back( octant );
@@ -825,9 +826,10 @@ namespace Ogre
             const Vector3 voxelCellSize = getVoxelCellSize();
             const Vector3 voxelOrigin = getVoxelOrigin();
             octant.region.setExtents(
-                voxelOrigin + voxelCellSize * Vector3( octant.x, octant.y, octant.z ),
-                voxelOrigin + voxelCellSize * Vector3( octant.x + octant.width, octant.y + octant.height,
-                                                       octant.z + octant.depth ) );
+                voxelOrigin + voxelCellSize * Vector3( (Real)octant.x, (Real)octant.y, (Real)octant.z ),
+                voxelOrigin + voxelCellSize * Vector3( Real( octant.x + octant.width ),
+                                                       Real( octant.y + octant.height ),
+                                                       Real( octant.z + octant.depth ) ) );
 
             mOctants.push_back( octant );
         }
@@ -867,9 +869,10 @@ namespace Ogre
             const Vector3 voxelCellSize = getVoxelCellSize();
             const Vector3 voxelOrigin = getVoxelOrigin();
             octant.region.setExtents(
-                voxelOrigin + voxelCellSize * Vector3( octant.x, octant.y, octant.z ),
-                voxelOrigin + voxelCellSize * Vector3( octant.x + octant.width, octant.y + octant.height,
-                                                       octant.z + octant.depth ) );
+                voxelOrigin + voxelCellSize * Vector3( (Real)octant.x, (Real)octant.y, (Real)octant.z ),
+                voxelOrigin + voxelCellSize * Vector3( Real( octant.x + octant.width ),
+                                                       Real( octant.y + octant.height ),
+                                                       Real( octant.z + octant.depth ) ) );
 
             mOctants.push_back( octant );
         }
@@ -918,9 +921,10 @@ namespace Ogre
             const Vector3 voxelCellSize = getVoxelCellSize();
             const Vector3 voxelOrigin = getVoxelOrigin();
             octant.region.setExtents(
-                voxelOrigin + voxelCellSize * Vector3( octant.x, octant.y, octant.z ),
-                voxelOrigin + voxelCellSize * Vector3( octant.x + octant.width, octant.y + octant.height,
-                                                       octant.z + octant.depth ) );
+                voxelOrigin + voxelCellSize * Vector3( (Real)octant.x, (Real)octant.y, (Real)octant.z ),
+                voxelOrigin + voxelCellSize * Vector3( Real( octant.x + octant.width ),
+                                                       Real( octant.y + octant.height ),
+                                                       Real( octant.z + octant.depth ) ) );
 
             mOctants.push_back( octant );
         }

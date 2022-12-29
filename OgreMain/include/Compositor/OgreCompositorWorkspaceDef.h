@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -29,21 +29,22 @@ THE SOFTWARE.
 #ifndef __CompositorWorkspaceDef_H__
 #define __CompositorWorkspaceDef_H__
 
-#include "OgreHeaderPrefix.h"
 #include "Compositor/OgreTextureDefinition.h"
 
 #include "ogrestd/list.h"
 
+#include "OgreHeaderPrefix.h"
+
 namespace Ogre
 {
     /** \addtogroup Core
-    *  @{
-    */
+     *  @{
+     */
     /** \addtogroup Effects
-    *  @{
-    */
+     *  @{
+     */
 
-    /** @See CompositorWorkspace. Workspace definitions assume all other definitions are already
+    /** @see CompositorWorkspace. Workspace definitions assume all other definitions are already
         parsed as we need them to perform validation checks.
         Workspace definitions work by assigning aliases to each node. A node whose name is the
         same as its alias is called an implicit alias.
@@ -57,41 +58,46 @@ namespace Ogre
     class _OgreExport CompositorWorkspaceDef : public TextureDefinitionBase
     {
         friend class CompositorWorkspace;
+
     public:
         struct ChannelRoute
         {
-            uint32      outChannel;
-            IdString    outNode;        /// Name of the alias
-            uint32      inChannel;
-            IdString    inNode;         /// Name of the alias
+            uint32   outChannel;
+            IdString outNode;  ///< Name of the alias
+            uint32   inChannel;
+            IdString inNode;  ///< Name of the alias
             ChannelRoute( uint32 _outChannel, IdString _outNode, uint32 _inChannel, IdString _inNode ) :
-                        outChannel( _outChannel ), outNode( _outNode ),
-                        inChannel( _inChannel ), inNode( _inNode ) {}
+                outChannel( _outChannel ),
+                outNode( _outNode ),
+                inChannel( _inChannel ),
+                inNode( _inNode )
+            {
+            }
         };
 
-        typedef map<IdString, IdString>::type   NodeAliasMap;
-        typedef list<ChannelRoute>::type        ChannelRouteList;
-    protected:
+        typedef map<IdString, IdString>::type NodeAliasMap;
+        typedef list<ChannelRoute>::type      ChannelRouteList;
 
-        IdString            mName;
-        String              mNameStr;
-        NodeAliasMap        mAliasedNodes;
-        ChannelRouteList    mChannelRoutes;
-        ChannelRouteList    mBufferChannelRoutes;
-        
+    protected:
+        IdString         mName;
+        String           mNameStr;
+        NodeAliasMap     mAliasedNodes;
+        ChannelRouteList mChannelRoutes;
+        ChannelRouteList mBufferChannelRoutes;
+
         /// outChannel  => Index to CompositorWorkspace::mExternalRenderTargets.
         /// outNode     => Not used.
         /// inChannel   => Which channel to connect to.
         /// inNode      => Which node to connect to.
-        ChannelRouteList	mExternalChannelRoutes;
+        ChannelRouteList mExternalChannelRoutes;
 
         /// outChannel  => Index to CompositorWorkspace::mExternalBuffers
         /// outNode     => Not used.
         /// inChannel   => Which channel to connect to.
         /// inNode      => Which node to connect to.
-        ChannelRouteList    mExternalBufferChannelRoutes;
+        ChannelRouteList mExternalBufferChannelRoutes;
 
-        CompositorManager2  *mCompositorManager;
+        CompositorManager2 *mCompositorManager;
 
         /** Checks if nodeName is already aliased (whether explicitly or implicitly). If not,
             checks whether the name of the node corresponds to an actual Node definition.
@@ -107,34 +113,31 @@ namespace Ogre
         /// Checks the input channel of the given node is not in use.
         /// Logs a warning if it's in use. Generic version.
         void checkInputChannelIsEmpty( const ChannelRouteList &internalChannelRoutes,
-                                       const ChannelRouteList &externalChannelRoutes,
-                                       IdString inNode, uint32 inChannel,
-                                       const std::string &outNodeName,
+                                       const ChannelRouteList &externalChannelRoutes, IdString inNode,
+                                       uint32 inChannel, const std::string &outNodeName,
                                        uint32 outChannel ) const;
 
         /// Checks the input channel of the given node is not in use.
         /// Logs a warning if it's in use.
-        void checkInputChannelIsEmpty( IdString inNode, uint32 inChannel,
-                                       const std::string &outNodeName,
+        void checkInputChannelIsEmpty( IdString inNode, uint32 inChannel, const std::string &outNodeName,
                                        uint32 outChannel ) const;
 
         /// Checks the buffer input channel of the given node is not in use.
         /// Logs a warning if it's in use.
         void checkInputBufferChannelIsEmpty( IdString inNode, uint32 inChannel,
-                                             const std::string &outNodeName,
-                                             uint32 outChannel ) const;
+                                             const std::string &outNodeName, uint32 outChannel ) const;
 
     public:
-        CompositorWorkspaceDef( const String& name, CompositorManager2 *compositorManager );
+        CompositorWorkspaceDef( const String &name, CompositorManager2 *compositorManager );
         virtual ~CompositorWorkspaceDef() {}
 
-        IdString getName(void) const                                { return mName; }
-        String getNameStr(void) const                               { return mNameStr; }
+        IdString getName() const { return mName; }
+        String   getNameStr() const { return mNameStr; }
 
         /** Connects outNode's output channel to inNode's input channel.
         @remarks
             This mapping will later be used to know how connections should be done when
-            instantiating. @See CompositorNode::connectTo
+            instantiating. @see CompositorNode::connectTo
             If outNode & inNode are not yet aliased, an alias for them will be created.
         */
         void connect( IdString outNode, uint32 outChannel, IdString inNode, uint32 inChannel );
@@ -157,7 +160,7 @@ namespace Ogre
         /** Connects outNode's output buffer channel to inNode's input buffer channel.
         @remarks
             This mapping will later be used to know how connections should be done when
-            instantiating. @See CompositorNode::connectBufferTo
+            instantiating. @see CompositorNode::connectBufferTo
             If outNode & inNode are not yet aliased, an alias for them will be created.
         */
         void connectBuffer( IdString outNode, uint32 outChannel, IdString inNode, uint32 inChannel );
@@ -176,38 +179,38 @@ namespace Ogre
         */
         void connectExternalBuffer( uint32 externalBufferIdx, IdString inNode, uint32 inChannel );
 
-        /** Clears all the connection between channels of the nodes (@see connect).
+        /** Clears all the connection between channels of the nodes @see connect
         @remarks
             1. We don't clear the output connection (@see connectOutput, @see clearOutputConnections)
-            2. The node aliases (both implicit and explicit) will still exist. @See clearAll.
+            2. The node aliases (both implicit and explicit) will still exist. @see clearAll.
             3. A node with incomplete inputs should be disabled before the workspace is instantiated
                (@see CompositorNodeDef::setStartEnabled). If the workspace has already been instantiated,
                the node instance should be disabled, @see CompositorNode::setEnabled)
             4. It is safe to call this function while there are still workspaces, but you must call
-               @Workspace::reconnectAllNodes after you're done setting the new node connections
+               CompositorWorkspace::reconnectAllNodes after you're done setting the new node connections
         */
-        void clearAllInterNodeConnections(void);
+        void clearAllInterNodeConnections();
 
         /** Clears the connection from the "final output RenderTarget" (i.e. usually the RenderWindow)
-            that goes to the input channel of one of our nodes. @See connectOutput.
+            that goes to the input channel of one of our nodes. @see connectOutput.
         @remarks
             1. We don't clear other type of connections (@see connect, @see clearAllInterNodeConnections)
-            2. The node aliases (both implicit and explicit) will still exist. @See clearAll.
+            2. The node aliases (both implicit and explicit) will still exist. @see clearAll.
             3. A node with incomplete inputs should be disabled before the workspace is instantiated
                (@see CompositorNodeDef::setStartEnabled). If the workspace has already been instantiated,
                the node instance should be disabled, @see CompositorNode::setEnabled)
             4. It is safe to call this function while there are still workspaces, but you must call
-               @Workspace::reconnectAllNodes after you're done setting the new node connections
+               CompositorWorkspace::reconnectAllNodes after you're done setting the new node connections
         */
-        void clearOutputConnections(void);
+        void clearOutputConnections();
 
         /** Clears everything: All node aliases, and their connections (including output connection).
         @remarks
             This function shouldn't be called while there are still instantiated workspaces
             It is safe to call this function while there are still workspaces, but you must call
-            @Workspace::recreateAllNodes after you're done setting the new node connections.
+            CompositorWorkspace:recreateAllNodes after you're done setting the new node connections.
         */
-        void clearAll(void);
+        void clearAll();
 
         /** An alias is explicitly used when the user wants to use multiple, independent
             instances of the same node. Each alias equals one instance.
@@ -232,9 +235,9 @@ namespace Ogre
 
         /** Gets read-only access to the map to all added nodes and their aliases.
             Useful to know which nodes are in use by this compositor.
-            Use @addNodeAlias @removeNodeAlias and @connect to safely modify the map.
+            Use addNodeAlias() removeNodeAlias() and connect() to safely modify the map.
         */
-        const NodeAliasMap& getNodeAliasMap(void)                   { return mAliasedNodes; }
+        const NodeAliasMap &getNodeAliasMap() { return mAliasedNodes; }
 
         /** Gets direct access to the channel route (aka the interconnections between all of our nodes).
             Useful for advanced C++ users who want fine control of the connections.
@@ -247,14 +250,14 @@ namespace Ogre
                 3. A node that doesn't have all of its input channels connected is incomplete
                    and should be disabled for the Workspace instance to be valid.
         */
-        ChannelRouteList& _getChannelRoutes(void)                   { return mChannelRoutes; }
+        ChannelRouteList &_getChannelRoutes() { return mChannelRoutes; }
 
-        CompositorManager2* getCompositorManager(void) const        { return mCompositorManager; }
+        CompositorManager2 *getCompositorManager() const { return mCompositorManager; }
     };
 
     /** @} */
     /** @} */
-}
+}  // namespace Ogre
 
 #include "OgreHeaderSuffix.h"
 

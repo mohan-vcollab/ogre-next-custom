@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
 (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -47,6 +47,12 @@ namespace Ogre
 #ifdef OGRE_VK_WORKAROUND_BAD_3D_BLIT
     bool Workarounds::mBad3DBlit = false;
 #endif
+#ifdef OGRE_VK_WORKAROUND_ADRENO_618_0VERTEX_INDIRECT
+    bool Workarounds::mAdreno618_0VertexIndirect = true;
+#endif
+#ifdef OGRE_VK_WORKAROUND_PVR_ALIGNMENT
+    uint32 Workarounds::mPowerVRAlignment = 0u;
+#endif
 
     void Workarounds::dump( String &outStr )
     {
@@ -64,6 +70,14 @@ namespace Ogre
 #endif
 #ifdef OGRE_VK_WORKAROUND_BAD_3D_BLIT
         outStr += "\n - mBad3DBlit: " + StringConverter::toString( Workarounds::mBad3DBlit );
+#endif
+#ifdef OGRE_VK_WORKAROUND_ADRENO_618_0VERTEX_INDIRECT
+        outStr += "\n - mAdreno618_0VertexIndirect: " +
+                  StringConverter::toString( Workarounds::mAdreno618_0VertexIndirect );
+#endif
+#ifdef OGRE_VK_WORKAROUND_PVR_ALIGNMENT
+        outStr +=
+            "\n - mPowerVRAlignment: " + StringConverter::toString( Workarounds::mPowerVRAlignment );
 #endif
     }
 }  // namespace Ogre

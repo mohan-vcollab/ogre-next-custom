@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -32,7 +32,6 @@ THE SOFTWARE.
 
 #include "Compositor/OgreCompositorNode.h"
 #include "Compositor/Pass/PassTargetBarrier/OgreCompositorPassTargetBarrierDef.h"
-
 #include "OgreRenderSystem.h"
 
 namespace Ogre

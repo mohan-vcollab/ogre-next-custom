@@ -14,23 +14,24 @@ namespace Ogre
 
 namespace Demo
 {
-    class ReadbackGameState : public TutorialGameState, public Ogre::UniformScalableTask
+    class ReadbackGameState final : public TutorialGameState, public Ogre::UniformScalableTask
     {
         Ogre::HlmsUnlitDatablock *mUnlitDatablock;
 
         Ogre::uint32 mRgbaReference;
+        Ogre::uint8 mRgbaResult[4];
         Ogre::TextureBox const *mTextureBox;
         bool mRaceConditionDetected;
 
-        virtual void generateDebugText( float timeSinceLast, Ogre::String &outText );
+        void generateDebugText( float timeSinceLast, Ogre::String &outText ) override;
 
     public:
         ReadbackGameState( const Ogre::String &helpDescription );
 
-        virtual void createScene01( void );
-        virtual void update( float timeSinceLast );
+        void createScene01() override;
+        void update( float timeSinceLast ) override;
 
-        virtual void execute( size_t threadId, size_t numThreads );
+        void execute( size_t threadId, size_t numThreads ) override;
     };
 }  // namespace Demo
 

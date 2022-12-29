@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -83,12 +83,12 @@ namespace Ogre
         }
     }
     //-----------------------------------------------------------------------------------
-    const char *VulkanAndroidWindow::getRequiredExtensionName( void )
+    const char *VulkanAndroidWindow::getRequiredExtensionName()
     {
         return VK_KHR_ANDROID_SURFACE_EXTENSION_NAME;
     }
     //-----------------------------------------------------------------------------------
-    void VulkanAndroidWindow::destroy( void )
+    void VulkanAndroidWindow::destroy()
     {
         VulkanWindowSwapChainBased::destroy();
 
@@ -104,6 +104,12 @@ namespace Ogre
         {
             // switchFullScreen( false );
             mRequestedFullscreenMode = false;
+        }
+
+        if( mNativeWindow )
+        {
+            ANativeWindow_release( mNativeWindow );
+            mNativeWindow = nullptr;
         }
     }
     //-------------------------------------------------------------------------
@@ -171,7 +177,7 @@ namespace Ogre
         }
     }
     //-----------------------------------------------------------------------------------
-    void VulkanAndroidWindow::windowMovedOrResized( void )
+    void VulkanAndroidWindow::windowMovedOrResized()
     {
         if( mClosed || !mNativeWindow )
             return;
@@ -199,7 +205,7 @@ namespace Ogre
     //-------------------------------------------------------------------------
     void VulkanAndroidWindow::_setVisible( bool visible ) { mVisible = visible; }
     //-------------------------------------------------------------------------
-    bool VulkanAndroidWindow::isVisible( void ) const { return mVisible; }
+    bool VulkanAndroidWindow::isVisible() const { return mVisible; }
     //-------------------------------------------------------------------------
     void VulkanAndroidWindow::setHidden( bool hidden )
     {
@@ -211,10 +217,21 @@ namespace Ogre
             return;
     }
     //-------------------------------------------------------------------------
-    bool VulkanAndroidWindow::isHidden( void ) const { return false; }
+    bool VulkanAndroidWindow::isHidden() const { return false; }
     //-------------------------------------------------------------------------
     void VulkanAndroidWindow::setNativeWindow( ANativeWindow *nativeWindow )
     {
+        if( mNativeWindow && !nativeWindow )
+        {
+            // Android is destroying our window. Likely user pressed the home or power
+            // button.
+            //
+            // We must flush all our references to the old swapchain otherwise when
+            // the app goes to foreground again and submit that stale content Mali
+            // will return DEVICE_LOST
+            mDevice->stall();
+        }
+
         destroy();
 
         // Depth & Stencil buffer are normal textures; thus they need to be reeinitialized normally
@@ -226,7 +243,14 @@ namespace Ogre
             mStencilBuffer->_transitionTo( GpuResidency::OnStorage, (uint8 *)0 );
         }
 
-        mNativeWindow = nativeWindow;
+        if( mNativeWindow != nativeWindow )
+        {
+            if( mNativeWindow )
+                ANativeWindow_release( mNativeWindow );
+            mNativeWindow = nativeWindow;
+            if( mNativeWindow )
+                ANativeWindow_acquire( mNativeWindow );
+        }
 
         if( !mNativeWindow )
             return;
@@ -268,7 +292,7 @@ namespace Ogre
 
             if( mDepthBuffer )
             {
-                mTexture->_setDepthBufferDefaults( DepthBuffer::POOL_NON_SHAREABLE, false,
+                mTexture->_setDepthBufferDefaults( DepthBuffer::NO_POOL_EXPLICIT_RTV, false,
                                                    mDepthBuffer->getPixelFormat() );
             }
             else

@@ -1,6 +1,6 @@
 /*
   -----------------------------------------------------------------------------
-  This source file is part of OGRE
+  This source file is part of OGRE-Next
   (Object-oriented Graphics Rendering Engine)
   For the latest info, see http://www.ogre3d.org/
 
@@ -37,7 +37,7 @@ namespace Ogre
 {
     class _OgrePrivate EGLGLSupport : public GL3PlusSupport
     {
-        FastArray<String> mDeviceNames;
+        FastArray<String>       mDeviceNames;
         FastArray<EGLDeviceEXT> mDevices;
 
         EGLDisplay mEglDisplay;
@@ -45,36 +45,36 @@ namespace Ogre
         /**
          * Refresh config options to reflect dependencies
          */
-        void refreshConfig( void );
+        void refreshConfig();
 
     public:
         EGLGLSupport();
         ~EGLGLSupport();
 
-        /// @copydoc see GL3PlusSupport::addConfig
-        void addConfig( void );
+        /// @copydoc GL3PlusSupport::addConfig
+        void addConfig();
 
-        /// @copydoc see GL3PlusSupport::validateConfig
-        String validateConfig( void );
+        /// @copydoc GL3PlusSupport::validateConfig
+        String validateConfig();
 
-        /// @copydoc see GL3PlusSupport::setConfigOption
+        /// @copydoc GL3PlusSupport::setConfigOption
         void setConfigOption( const String &name, const String &value );
 
         /// @copydoc GL3PlusSupport::createWindow
         Window *createWindow( bool autoCreateWindow, GL3PlusRenderSystem *renderSystem,
                               const String &windowTitle );
 
-        /// @copydoc RenderSystem::createRenderWindow
+        /// @copydoc Root::createRenderWindow
         Window *newWindow( const String &name, uint32 width, uint32 height, bool fullScreen,
                            const NameValuePairList *miscParams = 0 );
 
-        /// @copydoc see GL3PlusSupport::start
+        /// @copydoc GL3PlusSupport::start
         void start();
 
-        /// @copydoc see GL3PlusSupport::stop
+        /// @copydoc GL3PlusSupport::stop
         void stop();
 
-        /// @copydoc see GL3PlusSupport::getProcAddress
+        /// @copydoc GL3PlusSupport::getProcAddress
         void *getProcAddress( const char *procname ) const;
 
         ::EGLContext createNewContext( EGLDisplay eglDisplay, EGLConfig eglCfg,
@@ -82,9 +82,9 @@ namespace Ogre
 
         /// Get the Display connection used for rendering
         /// This function establishes the initial connection when necessary.
-        EGLDisplay getGLDisplay( void );
+        EGLDisplay getGLDisplay();
 
-        uint32 getSelectedDeviceIdx( void ) const;
+        uint32 getSelectedDeviceIdx() const;
     };
 }  // namespace Ogre
 

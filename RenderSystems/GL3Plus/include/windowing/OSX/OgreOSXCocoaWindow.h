@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
 (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org
 
@@ -36,8 +36,8 @@ THE SOFTWARE.
 #include "OgreOSXCocoaView.h"
 #include "OgreOSXCocoaWindowDelegate.h"
 
-#include "OgreWindow.h"
 #include "OgreTextureGpu.h"
+#include "OgreWindow.h"
 
 @class CocoaWindowDelegate;
 
@@ -50,14 +50,14 @@ namespace Ogre
     class _OgreGL3PlusExport CocoaWindow : public Window
     {
     private:
-        NSWindow *mWindow;
-        NSView *mView;
-        NSOpenGLContext *mGLContext;
+        NSWindow            *mWindow;
+        NSView              *mView;
+        NSOpenGLContext     *mGLContext;
         NSOpenGLPixelFormat *mGLPixelFormat;
         // CVDisplayLinkRef mDisplayLink;
-        NSPoint mWindowOriginPt;
+        NSPoint              mWindowOriginPt;
         CocoaWindowDelegate *mWindowDelegate;
-        CocoaContext* mContext;
+        CocoaContext        *mContext;
 
         bool mClosed;
         bool mVisible;
@@ -68,57 +68,57 @@ namespace Ogre
         bool mActive;
         bool mAutoDeactivatedOnFocusChange;
 
-        bool mHwGamma;
-        bool mVSync;
-        bool mHasResized;
+        bool   mHwGamma;
+        bool   mVSync;
+        bool   mHasResized;
         String mWindowTitle;
-        bool mUseOgreGLView;
-        float mContentScalingFactor;
-        
-        int _getPixelFromPoint(int viewPt) const;
-        void _setWindowParameters(unsigned int widthPt, unsigned int heightPt);
+        bool   mUseOgreGLView;
+        float  mContentScalingFactor;
+
+        int  _getPixelFromPoint( int viewPt ) const;
+        void _setWindowParameters( unsigned int widthPt, unsigned int heightPt );
 
     public:
-        CocoaWindow(const String &title, uint32 widthPt, uint32 heightPt, bool fullscreenMode);
+        CocoaWindow( const String &title, uint32 widthPt, uint32 heightPt, bool fullscreenMode );
         virtual ~CocoaWindow();
 
-        /** @copydoc see Window::_initialize */
-        void _initialize(TextureGpuManager *textureManager) override;
+        /** @copydoc Window::_initialize */
+        void _initialize( TextureGpuManager *textureManager ) override;
 
-        /** @copydoc see Window::setVSync */
+        /** @copydoc Window::setVSync */
         // void setVSync(bool vSync, uint32 vSyncInterval) override;
 
-        /** @copydoc see Window::getViewPointToPixelScale */
+        /** @copydoc Window::getViewPointToPixelScale */
         float getViewPointToPixelScale() const override;
 
-        /** @copydoc see Window::destroy */
-        void destroy(void) override;
+        /** @copydoc Window::destroy */
+        void destroy() override;
 
-        /** @copydoc see Window::isVisible */
-        bool isVisible( void ) const override;
+        /** @copydoc Window::isVisible */
+        bool isVisible() const override;
 
-        /** @copydoc see Window::_setVisible */
+        /** @copydoc Window::_setVisible */
         void _setVisible( bool visible ) override;
 
-        /** @copydoc see Window::isClosed */
-        bool isClosed(void) const override;
+        /** @copydoc Window::isClosed */
+        bool isClosed() const override;
 
-        /** @copydoc see Window::isHidden */
-        bool isHidden(void) const override { return mHidden; }
+        /** @copydoc Window::isHidden */
+        bool isHidden() const override { return mHidden; }
 
-        /** @copydoc see RenderWindow::setHidden */
-        void setHidden(bool hidden) override;
+        /** @copydoc Window::setHidden */
+        void setHidden( bool hidden ) override;
 
-        /** @copydoc see Window::reposition */
-        void reposition(int leftPt, int topPt) override;
+        /** @copydoc Window::reposition */
+        void reposition( int leftPt, int topPt ) override;
 
-        /** @copydoc see Window::swapBuffers */
+        /** @copydoc Window::swapBuffers */
         void swapBuffers() override;
 
-        /** @copydoc see Window::windowMovedOrResized */
-        void windowMovedOrResized(void) override;
+        /** @copydoc Window::windowMovedOrResized */
+        void windowMovedOrResized() override;
 
-        /** @copydoc see Window::getCustomAttribute */
+        /** @copydoc Window::getCustomAttribute */
         /**
            @remarks
            * Get custom attribute; the following attributes are valid:
@@ -128,25 +128,24 @@ namespace Ogre
            * NSOPENGLCONTEXT
            * NSOPENGLPIXELFORMAT
            */
-        void getCustomAttribute(IdString name, void* pData);
+        void getCustomAttribute( IdString name, void *pData );
 
     public:
         // Required by CocoaWindowDelegate
-        void setVisible(bool visible);
+        void setVisible( bool visible );
 
-        // Legacy: from RenderTarget, RenderWindow 
+        // Legacy: from RenderTarget, RenderWindow
         bool isActive() const;
-        void setActive(bool value);
+        void setActive( bool value );
         bool isDeactivatedOnFocusChange() const;
-        void setDeactivateOnFocusChange(bool deactivate);
+        void setDeactivateOnFocusChange( bool deactivate );
 
-        void create(const String &name, unsigned int widthPt, unsigned int heightPt,
-            bool fullScreen, const NameValuePairList *miscParams);
+        void create( const String &name, unsigned int widthPt, unsigned int heightPt, bool fullScreen,
+                     const NameValuePairList *miscParams );
 
     private:
-        void _createNewWindow(String title, unsigned int widthPt, unsigned int heightPt);
-
+        void _createNewWindow( String title, unsigned int widthPt, unsigned int heightPt );
     };
 }
 
-#endif // __OSXCocoaWindow_H__
+#endif  // __OSXCocoaWindow_H__

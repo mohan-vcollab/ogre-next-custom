@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -26,28 +26,29 @@ THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
 #include "OgreStableHeaders.h"
+
 #include "OgreSceneNode.h"
 
-#include "OgreException.h"
-#include "OgreSceneManager.h"
-#include "OgreMovableObject.h"
-
 #include "Animation/OgreSkeletonInstance.h"
+#include "OgreException.h"
+#include "OgreMovableObject.h"
+#include "OgreSceneManager.h"
 
-namespace Ogre {
+namespace Ogre
+{
     //-----------------------------------------------------------------------
-    SceneNode::SceneNode( IdType id, SceneManager* creator, NodeMemoryManager *nodeMemoryManager,
-                            SceneNode *parent )
-        : Node( id, nodeMemoryManager, parent )
-        , mCreator(creator)
-		, mYawFixed(false)
+    SceneNode::SceneNode( IdType id, SceneManager *creator, NodeMemoryManager *nodeMemoryManager,
+                          SceneNode *parent ) :
+        Node( id, nodeMemoryManager, parent ),
+        mCreator( creator ),
+        mYawFixed( false )
     {
     }
     //-----------------------------------------------------------------------
-    SceneNode::SceneNode( const Transform &transformPtrs )
-        : Node( transformPtrs )
-        , mCreator(0)
-		, mYawFixed(false)
+    SceneNode::SceneNode( const Transform &transformPtrs ) :
+        Node( transformPtrs ),
+        mCreator( 0 ),
+        mYawFixed( false )
     {
     }
     //-----------------------------------------------------------------------
@@ -72,147 +73,142 @@ namespace Ogre {
             if( mCreator && bStatic )
                 mCreator->notifyStaticDirty( this );
 
-            //Now apply the same state to all our attachments.
-            ObjectVec::const_iterator itor = mAttachments.begin();
-            ObjectVec::const_iterator end  = mAttachments.end();
-
-            while( itor != end )
+            // Now apply the same state to all our attachments.
+            for( MovableObject *obj : mAttachments )
             {
-                MovableObject *obj = *itor;
                 if( obj->isStatic() != ourCurrentStatus )
                 {
                     bool result = obj->setStatic( bStatic );
                     if( !result )
                     {
-                        OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS,
+                        OGRE_EXCEPT(
+                            Exception::ERR_INVALIDPARAMS,
                             "Calling SceneNode::setStatic but attachment ID: " +
-                            StringConverter::toString( obj->getId() ) + ", named '" + obj->getName() +
-                            "' can't switch after creation. This entity must be created in the given"
-                            " state before making the node switch", "SceneNode::setStatic");
+                                StringConverter::toString( obj->getId() ) + ", named '" +
+                                obj->getName() +
+                                "' can't switch after creation. This entity must be created in the given"
+                                " state before making the node switch",
+                            "SceneNode::setStatic" );
                     }
                 }
-                ++itor;
             }
         }
 
         return retVal;
     }
     //-----------------------------------------------------------------------
-    void SceneNode::_notifyStaticDirty(void) const
+    void SceneNode::_notifyStaticDirty() const
     {
         if( mCreator )
         {
-            //All our attachments are dirty now.
-            ObjectVec::const_iterator itor = mAttachments.begin();
-            ObjectVec::const_iterator end  = mAttachments.end();
-
-            while( itor != end )
-                mCreator->notifyStaticAabbDirty( *itor++ );
+            // All our attachments are dirty now.
+            for( MovableObject *obj : mAttachments )
+                mCreator->notifyStaticAabbDirty( obj );
         }
     }
     //-----------------------------------------------------------------------
-    void SceneNode::attachObject(MovableObject* obj)
+    void SceneNode::attachObject( MovableObject *obj )
     {
-        if (obj->isAttached())
+        if( obj->isAttached() )
         {
-            OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS,
-                "Object already attached to a SceneNode or a Bone",
-                "SceneNode::attachObject");
+            OGRE_EXCEPT( Exception::ERR_INVALIDPARAMS,
+                         "Object already attached to a SceneNode or a Bone", "SceneNode::attachObject" );
         }
 
-        obj->_notifyAttached(this);
+        obj->_notifyAttached( this );
 
         // Also add to name index
         mAttachments.push_back( obj );
         obj->mParentIndex = mAttachments.size() - 1;
-        
-        //Do this after attaching to allow proper cleanup in cases
-        //where object assumes it always has a scene node attached
+
+        // Do this after attaching to allow proper cleanup in cases
+        // where object assumes it always has a scene node attached
         if( obj->isStatic() != this->isStatic() )
         {
-            OGRE_EXCEPT(Exception::ERR_INVALIDPARAMS,
-                "Object is static while Node isn't, or viceversa",
-                "SceneNode::attachObject");
+            OGRE_EXCEPT( Exception::ERR_INVALIDPARAMS, "Object is static while Node isn't, or viceversa",
+                         "SceneNode::attachObject" );
         }
     }
     //-----------------------------------------------------------------------
-    SceneNode::ObjectVec::iterator SceneNode::getAttachedObjectIt( const String& name )
+    SceneNode::ObjectVec::iterator SceneNode::getAttachedObjectIt( const String &name )
     {
         ObjectVec::iterator itor = mAttachments.begin();
-        ObjectVec::iterator end  = mAttachments.end();
+        ObjectVec::iterator endt = mAttachments.end();
 
-        while( itor != end )
+        while( itor != endt )
         {
-            if( (*itor)->getName() == name )
+            if( ( *itor )->getName() == name )
                 return itor;
             ++itor;
         }
 
-        return end;
+        return endt;
     }
     //-----------------------------------------------------------------------
-    SceneNode::ObjectVec::const_iterator SceneNode::getAttachedObjectIt( const String& name ) const
+    SceneNode::ObjectVec::const_iterator SceneNode::getAttachedObjectIt( const String &name ) const
     {
         ObjectVec::const_iterator itor = mAttachments.begin();
-        ObjectVec::const_iterator end  = mAttachments.end();
+        ObjectVec::const_iterator endt = mAttachments.end();
 
-        while( itor != end )
+        while( itor != endt )
         {
-            if( (*itor)->getName() == name )
+            if( ( *itor )->getName() == name )
                 return itor;
             ++itor;
         }
 
-        return end;
+        return endt;
     }
     //-----------------------------------------------------------------------
-    MovableObject* SceneNode::getAttachedObject( const String& name )
+    MovableObject *SceneNode::getAttachedObject( const String &name )
     {
         ObjectVec::const_iterator itor = getAttachedObjectIt( name );
 
         if( itor == mAttachments.end() )
         {
-            OGRE_EXCEPT(Exception::ERR_ITEM_NOT_FOUND, "Attached object " + 
-                    name + " not found.", "SceneNode::getAttachedObject");
+            OGRE_EXCEPT( Exception::ERR_ITEM_NOT_FOUND, "Attached object " + name + " not found.",
+                         "SceneNode::getAttachedObject" );
         }
 
         return *itor;
     }
     //-----------------------------------------------------------------------
-    void SceneNode::detachObject( MovableObject* obj )
+    void SceneNode::detachObject( MovableObject *obj )
     {
         if( obj->getParentNode() != this )
         {
-            OGRE_EXCEPT(Exception::ERR_ITEM_NOT_FOUND, "MovableObject ID: " +
-                StringConverter::toString( obj->getId() ) + ", named '" + obj->getName() +
-                "' is not attached to this SceneNode!", "SceneNode::detachObject");
+            OGRE_EXCEPT( Exception::ERR_ITEM_NOT_FOUND,
+                         "MovableObject ID: " + StringConverter::toString( obj->getId() ) + ", named '" +
+                             obj->getName() + "' is not attached to this SceneNode!",
+                         "SceneNode::detachObject" );
         }
         else if( obj->mParentIndex >= mAttachments.size() ||
-                 obj != *(mAttachments.begin() + obj->mParentIndex) )
+                 obj != *( mAttachments.begin() + static_cast<ptrdiff_t>( obj->mParentIndex ) ) )
         {
-            OGRE_EXCEPT(Exception::ERR_INTERNAL_ERROR, "MovableObject ID: " +
-                StringConverter::toString( obj->getId() ) + ", named '" + obj->getName() +
-                "' had it's mParentIndex out of date!!! (or the MovableObject wasn't "
-                "attached to this SceneNode)", "SceneNode::detachObject");
+            OGRE_EXCEPT( Exception::ERR_INTERNAL_ERROR,
+                         "MovableObject ID: " + StringConverter::toString( obj->getId() ) + ", named '" +
+                             obj->getName() +
+                             "' had it's mParentIndex out of date!!! (or the MovableObject wasn't "
+                             "attached to this SceneNode)",
+                         "SceneNode::detachObject" );
         }
 
-        ObjectVec::iterator itor = mAttachments.begin() + obj->mParentIndex;
+        ObjectVec::iterator itor = mAttachments.begin() + static_cast<ptrdiff_t>( obj->mParentIndex );
 
-        (*itor)->_notifyAttached( (SceneNode*)0 );
+        ( *itor )->_notifyAttached( (SceneNode *)0 );
         itor = efficientVectorRemove( mAttachments, itor );
 
         if( itor != mAttachments.end() )
         {
-            //The object that was at the end got swapped and has now a different index
-            (*itor)->mParentIndex = itor - mAttachments.begin();
+            // The object that was at the end got swapped and has now a different index
+            ( *itor )->mParentIndex = static_cast<size_t>( itor - mAttachments.begin() );
         }
     }
     //-----------------------------------------------------------------------
-    void SceneNode::detachAllObjects(void)
+    void SceneNode::detachAllObjects()
     {
-        ObjectVec::iterator itr;
-        for ( itr = mAttachments.begin(); itr != mAttachments.end(); ++itr )
-            (*itr)->_notifyAttached( (SceneNode*)0 );
+        for( MovableObject *obj : mAttachments )
+            obj->_notifyAttached( (SceneNode *)0 );
         mAttachments.clear();
     }
     //-----------------------------------------------------------------------
@@ -224,8 +220,7 @@ namespace Ogre {
     void SceneNode::_detachBone( SkeletonInstance *skeletonInstance, Bone *bone )
     {
         BoneVec::iterator itor = std::find( mBoneChildren[skeletonInstance].begin(),
-                                            mBoneChildren[skeletonInstance].end(),
-                                            bone );
+                                            mBoneChildren[skeletonInstance].end(), bone );
 
         assert( itor != mBoneChildren[skeletonInstance].end() );
 
@@ -239,55 +234,23 @@ namespace Ogre {
             mBoneChildren.erase( itor );
     }
     //-----------------------------------------------------------------------
-    void SceneNode::detachAllBones(void)
+    void SceneNode::detachAllBones()
     {
-        BonesPerSkeletonInstance::const_iterator itSkeletons = mBoneChildren.begin();
-        BonesPerSkeletonInstance::const_iterator enSkeletons = mBoneChildren.end();
-
-        while( itSkeletons != enSkeletons )
-        {
-            BoneVec::const_iterator itBone = itSkeletons->second.begin();
-            BoneVec::const_iterator enBone = itSkeletons->second.end();
-
-            while( itBone != enBone )
-            {
-                itSkeletons->first->setSceneNodeAsParentOfBone( *itBone, 0 );
-                ++itBone;
-            }
-
-            ++itSkeletons;
-        }
+        for( BonesPerSkeletonInstance::value_type &skeletonBones : mBoneChildren )
+            for( Bone *bone : skeletonBones.second )
+                skeletonBones.first->setSceneNodeAsParentOfBone( bone, 0 );
 
         mBoneChildren.clear();
     }
     //-----------------------------------------------------------------------
-    void SceneNode::_callMemoryChangeListeners(void)
+    void SceneNode::_callMemoryChangeListeners()
     {
-        ObjectVec::iterator itor = mAttachments.begin();
-        ObjectVec::iterator end  = mAttachments.end();
+        for( MovableObject *obj : mAttachments )
+            obj->_notifyParentNodeMemoryChanged();
 
-        while( itor != end )
-        {
-            (*itor)->_notifyParentNodeMemoryChanged();
-            ++itor;
-        }
-
-        BonesPerSkeletonInstance::const_iterator itSkeletons = mBoneChildren.begin();
-        BonesPerSkeletonInstance::const_iterator enSkeletons = mBoneChildren.end();
-
-        while( itSkeletons != enSkeletons )
-        {
-            BoneVec::const_iterator itBone = itSkeletons->second.begin();
-            BoneVec::const_iterator enBone = itSkeletons->second.end();
-
-            while( itBone != enBone )
-            {
-                (*itBone)->_setNodeParent( this );
-                ++itBone;
-            }
-
-            ++itSkeletons;
-        }
+        for( BonesPerSkeletonInstance::value_type &skeletonBones : mBoneChildren )
+            for( Bone *bone : skeletonBones.second )
+                bone->_setNodeParent( this );
     }
     /*TODO
     Node::DebugRenderable* SceneNode::getDebugRenderable()
@@ -299,9 +262,9 @@ namespace Ogre {
         return Node::getDebugRenderable(sz);
     }*/
     //-----------------------------------------------------------------------
-    Node* SceneNode::createChildImpl( SceneMemoryMgrTypes sceneType )
+    Node *SceneNode::createChildImpl( SceneMemoryMgrTypes sceneType )
     {
-        assert(mCreator);
+        assert( mCreator );
 
         NodeMemoryManager *nodeMemoryManager = mNodeMemoryManager;
         if( mNodeMemoryManager->getTwin() && mNodeMemoryManager->getMemoryManagerType() != sceneType )
@@ -309,12 +272,12 @@ namespace Ogre {
         return mCreator->_createSceneNode( this, nodeMemoryManager );
     }
     //-----------------------------------------------------------------------
-    SceneNode::ObjectIterator SceneNode::getAttachedObjectIterator(void)
+    SceneNode::ObjectIterator SceneNode::getAttachedObjectIterator()
     {
         return ObjectIterator( mAttachments.begin(), mAttachments.end() );
     }
     //-----------------------------------------------------------------------
-    SceneNode::ConstObjectIterator SceneNode::getAttachedObjectIterator(void) const
+    SceneNode::ConstObjectIterator SceneNode::getAttachedObjectIterator() const
     {
         return ConstObjectIterator( mAttachments.begin(), mAttachments.end() );
     }
@@ -328,83 +291,79 @@ namespace Ogre {
         sceneNode->getCreator()->destroySceneNode( sceneNode );
     }
     //-----------------------------------------------------------------------
-    void SceneNode::removeAndDestroyAllChildren(void)
+    void SceneNode::removeAndDestroyAllChildren()
     {
-        NodeVec::iterator itor = mChildren.begin();
-        NodeVec::iterator end  = mChildren.end();
-        while( itor != end )
+        for( Node *node : mChildren )
         {
-            SceneNode *sceneNode = static_cast<SceneNode*>( *itor );
+            SceneNode *sceneNode = static_cast<SceneNode *>( node );
             sceneNode->removeAndDestroyAllChildren();
             sceneNode->unsetParent();
             mCreator->destroySceneNode( sceneNode );
-            ++itor;
         }
 
         mChildren.clear();
     }
     //-----------------------------------------------------------------------
-    SceneNode* SceneNode::createChildSceneNode( SceneMemoryMgrTypes sceneType,
-                                                const Vector3& inTranslate,
-                                                const Quaternion& inRotate )
+    SceneNode *SceneNode::createChildSceneNode( SceneMemoryMgrTypes sceneType,
+                                                const Vector3 &inTranslate, const Quaternion &inRotate )
     {
-        return static_cast<SceneNode*>(this->createChild(sceneType, inTranslate, inRotate));
+        return static_cast<SceneNode *>( this->createChild( sceneType, inTranslate, inRotate ) );
     }
     //-----------------------------------------------------------------------
-    void SceneNode::setListener( Listener* listener )
+    void SceneNode::setListener( Listener *listener )
     {
         Listener *oldListener = mListener;
         Node::setListener( listener );
 
-        //Un/Register ourselves as a listener in the scene manager
+        // Un/Register ourselves as a listener in the scene manager
         if( oldListener )
             mCreator->unregisterSceneNodeListener( this );
         if( mListener )
             mCreator->registerSceneNodeListener( this );
     }
     //-----------------------------------------------------------------------
-	void SceneNode::setAutoTracking( bool enabled, SceneNode* const target,
-									 const Vector3& localDirectionVector, const Vector3& offset )
+    void SceneNode::setAutoTracking( bool enabled, SceneNode *const target,
+                                     const Vector3 &localDirectionVector, const Vector3 &offset )
     {
-		assert( mCreator && "Auto-Tracking only works with SceneNodes created by a SceneManager" );
-		if( enabled )
-			mCreator->_addAutotrackingSceneNode( this, target, offset, localDirectionVector );
-		else
-			mCreator->_removeAutotrackingSceneNode( this );
+        assert( mCreator && "Auto-Tracking only works with SceneNodes created by a SceneManager" );
+        if( enabled )
+            mCreator->_addAutotrackingSceneNode( this, target, offset, localDirectionVector );
+        else
+            mCreator->_removeAutotrackingSceneNode( this );
     }
     //-----------------------------------------------------------------------
-    void SceneNode::setFixedYawAxis(bool useFixed, const Vector3& fixedAxis)
+    void SceneNode::setFixedYawAxis( bool useFixed, const Vector3 &fixedAxis )
     {
         mYawFixed = useFixed;
         mYawFixedAxis = fixedAxis;
     }
 
     //-----------------------------------------------------------------------
-    void SceneNode::yaw(const Radian& angle, TransformSpace relativeTo)
+    void SceneNode::yaw( const Radian &angle, TransformSpace relativeTo )
     {
-        if (mYawFixed)
+        if( mYawFixed )
         {
-            rotate(mYawFixedAxis, angle, relativeTo);
+            rotate( mYawFixedAxis, angle, relativeTo );
         }
         else
         {
-            rotate(Vector3::UNIT_Y, angle, relativeTo);
+            rotate( Vector3::UNIT_Y, angle, relativeTo );
         }
-
     }
     //-----------------------------------------------------------------------
-    void SceneNode::setDirection(Real x, Real y, Real z, TransformSpace relativeTo, 
-        const Vector3& localDirectionVector)
+    void SceneNode::setDirection( Real x, Real y, Real z, TransformSpace relativeTo,
+                                  const Vector3 &localDirectionVector )
     {
-        setDirection(Vector3(x,y,z), relativeTo, localDirectionVector);
+        setDirection( Vector3( x, y, z ), relativeTo, localDirectionVector );
     }
 
     //-----------------------------------------------------------------------
-    void SceneNode::setDirection(const Vector3& vec, TransformSpace relativeTo, 
-        const Vector3& localDirectionVector)
+    void SceneNode::setDirection( const Vector3 &vec, TransformSpace relativeTo,
+                                  const Vector3 &localDirectionVector )
     {
         // Do nothing if given a zero vector
-        if (vec == Vector3::ZERO) return;
+        if( vec == Vector3::ZERO )
+            return;
 
         _updateFromParent();
 
@@ -414,12 +373,12 @@ namespace Ogre {
         const bool inheritOrientation = mTransform.mInheritOrientation[mTransform.mIndex];
 
         // Transform target direction to world space
-        switch (relativeTo)
+        switch( relativeTo )
         {
         case TS_PARENT:
             if( inheritOrientation )
             {
-                if (mParent)
+                if( mParent )
                 {
                     targetDir = mParent->_getDerivedOrientation() * targetDir;
                 }
@@ -440,66 +399,67 @@ namespace Ogre {
             // Calculate the quaternion for rotate local Z to target direction
             Vector3 yawAxis = mYawFixedAxis;
 
-            if (inheritOrientation && mParent) {
+            if( inheritOrientation && mParent )
+            {
                 yawAxis = mParent->_getDerivedOrientation() * yawAxis;
             }
 
-            Vector3 xVec = yawAxis.crossProduct(targetDir);
+            Vector3 xVec = yawAxis.crossProduct( targetDir );
             xVec.normalise();
-            Vector3 yVec = targetDir.crossProduct(xVec);
+            Vector3 yVec = targetDir.crossProduct( xVec );
             yVec.normalise();
-            Quaternion unitZToTarget = Quaternion(xVec, yVec, targetDir);
+            Quaternion unitZToTarget = Quaternion( xVec, yVec, targetDir );
 
-            if (localDirectionVector == Vector3::NEGATIVE_UNIT_Z)
+            if( localDirectionVector == Vector3::NEGATIVE_UNIT_Z )
             {
                 // Specail case for avoid calculate 180 degree turn
                 targetOrientation =
-                    Quaternion(-unitZToTarget.y, -unitZToTarget.z, unitZToTarget.w, unitZToTarget.x);
+                    Quaternion( -unitZToTarget.y, -unitZToTarget.z, unitZToTarget.w, unitZToTarget.x );
             }
             else
             {
                 // Calculate the quaternion for rotate local direction to target direction
-                Quaternion localToUnitZ = localDirectionVector.getRotationTo(Vector3::UNIT_Z);
+                Quaternion localToUnitZ = localDirectionVector.getRotationTo( Vector3::UNIT_Z );
                 targetOrientation = unitZToTarget * localToUnitZ;
             }
         }
         else
         {
-            const Quaternion& currentOrient = _getDerivedOrientation();
+            const Quaternion &currentOrient = _getDerivedOrientation();
 
             // Get current local direction relative to world space
             Vector3 currentDir = currentOrient * localDirectionVector;
 
-            if ((currentDir+targetDir).squaredLength() < 0.00005f)
+            if( ( currentDir + targetDir ).squaredLength() < 0.00005f )
             {
                 // Oops, a 180 degree turn (infinite possible rotation axes)
                 // Default to yaw i.e. use current UP
                 targetOrientation =
-                    Quaternion(-currentOrient.y, -currentOrient.z, currentOrient.w, currentOrient.x);
+                    Quaternion( -currentOrient.y, -currentOrient.z, currentOrient.w, currentOrient.x );
             }
             else
             {
                 // Derive shortest arc to new direction
-                Quaternion rotQuat = currentDir.getRotationTo(targetDir);
+                Quaternion rotQuat = currentDir.getRotationTo( targetDir );
                 targetOrientation = rotQuat * currentOrient;
             }
         }
 
         // Set target orientation, transformed to parent space
         if( mParent && inheritOrientation )
-            setOrientation(mParent->_getDerivedOrientation().UnitInverse() * targetOrientation);
+            setOrientation( mParent->_getDerivedOrientation().UnitInverse() * targetOrientation );
         else
-            setOrientation(targetOrientation);
+            setOrientation( targetOrientation );
     }
     //-----------------------------------------------------------------------
-    void SceneNode::lookAt( const Vector3& targetPoint, TransformSpace relativeTo, 
-        const Vector3& localDirectionVector)
+    void SceneNode::lookAt( const Vector3 &targetPoint, TransformSpace relativeTo,
+                            const Vector3 &localDirectionVector )
     {
         // Calculate ourself origin relative to the given transform space
         Vector3 origin;
-        switch (relativeTo)
+        switch( relativeTo )
         {
-        default:    // Just in case
+        default:  // Just in case
         case TS_WORLD:
             origin = _getDerivedPosition();
             break;
@@ -512,94 +472,50 @@ namespace Ogre {
         }
 
         setDirection( targetPoint - origin, relativeTo, localDirectionVector );
-	}
-    //-----------------------------------------------------------------------
-    SceneNode* SceneNode::getParentSceneNode(void) const
-    {
-        return static_cast<SceneNode*>(getParent());
     }
+    //-----------------------------------------------------------------------
+    SceneNode *SceneNode::getParentSceneNode() const { return static_cast<SceneNode *>( getParent() ); }
     //-----------------------------------------------------------------------
     void SceneNode::setVisible( bool visible, bool cascade )
     {
-        ObjectVec::iterator itor = mAttachments.begin();
-        ObjectVec::iterator end  = mAttachments.end();
+        for( MovableObject *obj : mAttachments )
+            obj->setVisible( visible );
 
-        while( itor != end )
+        if( cascade )
         {
-            (*itor)->setVisible( visible );
-            ++itor;
-        }
-
-        if (cascade)
-        {
-            NodeVec::iterator childItor = mChildren.begin();
-            NodeVec::iterator childItorEnd  = mChildren.end();
-            while( childItor != childItorEnd )
-            {
-                static_cast<SceneNode*>( *childItor )->setVisible( visible, cascade );
-                ++childItor;
-            }
+            for( Node *child : mChildren )
+                static_cast<SceneNode *>( child )->setVisible( visible, cascade );
         }
     }
     //-----------------------------------------------------------------------
-    void SceneNode::flipVisibility(bool cascade)
+    void SceneNode::flipVisibility( bool cascade )
     {
-        ObjectVec::iterator itor = mAttachments.begin();
-        ObjectVec::iterator end  = mAttachments.end();
+        for( MovableObject *obj : mAttachments )
+            obj->setVisible( !obj->getVisible() );
 
-        while( itor != end )
+        if( cascade )
         {
-            (*itor)->setVisible( !(*itor)->getVisible() );
-            ++itor;
-        }
-
-        if (cascade)
-        {
-            NodeVec::iterator childItor = mChildren.begin();
-            NodeVec::iterator childItorEnd  = mChildren.end();
-            while( childItor != childItorEnd )
-            {
-                static_cast<SceneNode*>( *childItor )->flipVisibility( cascade );
-                ++childItor;
-            }
+            for( Node *child : mChildren )
+                static_cast<SceneNode *>( child )->flipVisibility( cascade );
         }
     }
     //-----------------------------------------------------------------------
-    NodeMemoryManager* SceneNode::getDefaultNodeMemoryManager( SceneMemoryMgrTypes sceneType )
+    NodeMemoryManager *SceneNode::getDefaultNodeMemoryManager( SceneMemoryMgrTypes sceneType )
     {
         return &mCreator->_getNodeMemoryManager( sceneType );
     }
     //-----------------------------------------------------------------------
 #if OGRE_DEBUG_MODE
-    void SceneNode::_setCachedTransformOutOfDate(void)
+    void SceneNode::_setCachedTransformOutOfDate()
     {
         Node::_setCachedTransformOutOfDate();
 
-        ObjectVec::const_iterator itor = mAttachments.begin();
-        ObjectVec::const_iterator end  = mAttachments.end();
+        for( MovableObject *obj : mAttachments )
+            obj->_setCachedAabbOutOfDate();
 
-        while( itor != end )
-        {
-            (*itor)->_setCachedAabbOutOfDate();
-            ++itor;
-        }
-
-        BonesPerSkeletonInstance::const_iterator itSkeletons = mBoneChildren.begin();
-        BonesPerSkeletonInstance::const_iterator enSkeletons = mBoneChildren.end();
-
-        while( itSkeletons != enSkeletons )
-        {
-            BoneVec::const_iterator itBone = itSkeletons->second.begin();
-            BoneVec::const_iterator enBone = itSkeletons->second.end();
-
-            while( itBone != enBone )
-            {
-                (*itBone)->_setCachedTransformOutOfDate();
-                ++itBone;
-            }
-
-            ++itSkeletons;
-        }
+        for( BonesPerSkeletonInstance::value_type &skeletonBones : mBoneChildren )
+            for( Bone *bone : skeletonBones.second )
+                bone->_setCachedTransformOutOfDate();
     }
 #endif
-}
+}  // namespace Ogre

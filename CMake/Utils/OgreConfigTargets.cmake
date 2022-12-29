@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------
-# This file is part of the CMake build system for OGRE
+# This file is part of the CMake build system for OGRE-Next
 #     (Object-oriented Graphics Rendering Engine)
 # For the latest info, see http://www.ogre3d.org/
 #
@@ -17,7 +17,7 @@ if(APPLE)
 
   if(NOT OGRE_BUILD_PLATFORM_ANDROID AND NOT OGRE_BUILD_PLATFORM_APPLE_IOS)
     set(PLATFORM_NAME "macosx")
-  elseif(OGRE_BUILD_PLATFORM_APPLE_IOS)
+  elseif(OGRE_BUILD_PLATFORM_APPLE_IOS AND NOT CMAKE_GENERATOR STREQUAL "Ninja")
     set(PLATFORM_NAME "$(PLATFORM_NAME)")
   endif()
 endif()
@@ -67,9 +67,9 @@ elseif (UNIX)
   if (APPLE)
     set(OGRE_PLUGIN_PATH "/")
   else()
-    set(OGRE_PLUGIN_PATH "/OGRE")
+    set(OGRE_PLUGIN_PATH "/${OGRE_NEXT_PREFIX}")
   endif(APPLE)
-  set(OGRE_SAMPLE_PATH "/OGRE/Samples")
+  set(OGRE_SAMPLE_PATH "/${OGRE_NEXT_PREFIX}/Samples")
 endif ()
 
 # create vcproj.user file for Visual Studio to set debug working directory
@@ -94,6 +94,8 @@ function(ogre_install_target TARGETNAME SUFFIX EXPORT)
 	if (OGRE_SDK_BUILD)
 		return()
 	endif()
+
+	message(STATUS "Installing target: ${TARGETNAME} ${SUFFIX} ${EXPORT}")
 
 	if(EXPORT)
 	  install(TARGETS ${TARGETNAME} #EXPORT Ogre-exports

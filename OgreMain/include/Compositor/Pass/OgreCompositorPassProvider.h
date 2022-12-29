@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -29,19 +29,20 @@ THE SOFTWARE.
 #ifndef _OgreCompositorPassProvider_H_
 #define _OgreCompositorPassProvider_H_
 
-#include "OgreHeaderPrefix.h"
 #include "Compositor/OgreCompositorCommon.h"
 #include "OgreCompositorPassDef.h"
 #include "OgreScriptParser.h"
 
+#include "OgreHeaderPrefix.h"
+
 namespace Ogre
 {
     /** \addtogroup Core
-    *  @{
-    */
+     *  @{
+     */
     /** \addtogroup Scene
-    *  @{
-    */
+     *  @{
+     */
 
     struct RenderTargetViewDef;
 
@@ -72,44 +73,67 @@ namespace Ogre
         from CompositorPassClear & CompositorPassClearDef and implement your own
         custom pass that clears the render target.
     */
-    class _OgreExport CompositorPassProvider : public ResourceAlloc
+    class _OgreExport CompositorPassProvider : public OgreAllocatedObj
     {
     public:
+        virtual ~CompositorPassProvider();
+
         /** Called from CompositorTargetDef::addPass when adding a Compositor Pass of type 'custom'
         @param passType
         @param customId
             Arbitrary ID in case there is more than one type of custom pass you want to implement.
             Defaults to IdString()
-        @param rtIndex
+        @param parentTargetDef
         @param parentNodeDef
         @return
         */
-        virtual CompositorPassDef* addPassDef( CompositorPassType passType,
-                                               IdString customId,
+        virtual CompositorPassDef *addPassDef( CompositorPassType passType, IdString customId,
                                                CompositorTargetDef *parentTargetDef,
-                                               CompositorNodeDef *parentNodeDef ) = 0;
+                                               CompositorNodeDef   *parentNodeDef ) = 0;
 
         /** Creates a CompositorPass from a CompositorPassDef for Compositor Pass of type 'custom'
         @remarks    If you have multiple custom pass types then you will need to use dynamic_cast<>()
                     on the CompositorPassDef to determine what custom pass it is.
         */
-        virtual CompositorPass* addPass( const CompositorPassDef *definition, Camera *defaultCamera,
+        virtual CompositorPass *addPass( const CompositorPassDef *definition, Camera *defaultCamera,
                                          CompositorNode *parentNode, const RenderTargetViewDef *rtvDef,
                                          SceneManager *sceneManager ) = 0;
 
-        /** Optional override which allows users to define custom properties in the compositor scripts for custom passes.
-        @remarks    Please note this is called after CompositorPassProvider::addPassDef and similar to addPass
-                    you will need to dynamic_cast<>() to determine custom pass type.
+        /** Optional override which allows users to define custom properties in the compositor scripts
+        for custom passes.
+        @remarks    Please note this is called after CompositorPassProvider::addPassDef and similar to
+        addPass you will need to dynamic_cast<>() to determine custom pass type.
         @param node             The AST node for this pass
         @param customPassDef    The CompositorPassDef returned in CompositorPassProvider::addPassDef
 
         */
-        virtual void translateCustomPass(const AbstractNodePtr &node, CompositorPassDef* customPassDef) {}
+        virtual void translateCustomPass( ScriptCompiler *compiler, const AbstractNodePtr &node,
+                                          IdString customId, CompositorPassDef *customPassDef )
+        {
+#if OGRE_COMPILER == OGRE_COMPILER_MSVC
+#    pragma warning( push, 0 )
+#else
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+            translateCustomPass( node, customPassDef );
+#if OGRE_COMPILER == OGRE_COMPILER_MSVC
+#    pragma warning( pop )
+#else
+#    pragma GCC diagnostic pop
+#endif
+        }
+
+        /// @deprecated Use the other overload which has access to a lot more information
+        OGRE_DEPRECATED_VER( 3 )
+        virtual void translateCustomPass( const AbstractNodePtr &node, CompositorPassDef *customPassDef )
+        {
+        }
     };
 
     /** @} */
     /** @} */
-}
+}  // namespace Ogre
 
 #include "OgreHeaderSuffix.h"
 

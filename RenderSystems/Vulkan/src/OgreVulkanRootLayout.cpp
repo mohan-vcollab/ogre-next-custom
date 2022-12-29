@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -39,8 +39,16 @@ THE SOFTWARE.
 #include "OgreLwString.h"
 #include "OgreStringConverter.h"
 
+#if defined( __clang__ )
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"
+#    pragma clang diagnostic ignored "-Wdeprecated-copy"
+#endif
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
+#if defined( __clang__ )
+#    pragma clang diagnostic pop
+#endif
 
 #include "vulkan/vulkan_core.h"
 
@@ -162,14 +170,14 @@ namespace Ogre
                             macroStr += textStr.c_str();
                         }
 
-                        const size_t numSlots = mDescBindingRanges[i][j].getNumUsedSlots();
+                        const uint32 numSlots = mDescBindingRanges[i][j].getNumUsedSlots();
                         bindingIdx += numSlots;
                     }
                 }
                 else
                 {
                     uint32 emulatedSlot = mDescBindingRanges[i][j].start;
-                    const size_t numSlots = mDescBindingRanges[i][j].getNumUsedSlots();
+                    const uint32 numSlots = mDescBindingRanges[i][j].getNumUsedSlots();
 
                     FastArray<uint32>::const_iterator arrayRangesEnd = mArrayRanges[j].end();
                     FastArray<uint32>::const_iterator arrayRanges =
@@ -221,7 +229,7 @@ namespace Ogre
         macroStr.swap( inOutString );
     }
     //-------------------------------------------------------------------------
-    VkPipelineLayout VulkanRootLayout::createVulkanHandles( void )
+    VkPipelineLayout VulkanRootLayout::createVulkanHandles()
     {
         if( mRootLayout )
             return mRootLayout;
@@ -330,7 +338,7 @@ namespace Ogre
         writeDescSet.dstBinding = currBinding;
         writeDescSet.dstArrayElement = 0u;
         writeDescSet.descriptorCount = static_cast<uint32_t>( bindRanges.getNumUsedSlots() );
-        currBinding += bindRanges.getNumUsedSlots() - arrayedSlots;
+        currBinding += uint32( bindRanges.getNumUsedSlots() - arrayedSlots );
         ++numWriteDescSets;
     }
     //-------------------------------------------------------------------------
@@ -532,7 +540,7 @@ namespace Ogre
             size_t numWriteDescSets = 0u;
             uint32 currBinding = 0u;
             // ParamBuffer consumes up to 1 per stage (not just 1)
-            VkWriteDescriptorSet writeDescSets[DescBindingTypes::Sampler + NumShaderTypes];
+            VkWriteDescriptorSet writeDescSets[DescBindingTypes::Sampler + uint32( NumShaderTypes )];
 
             // Note: We must bind in the same order as DescBindingTypes
             if( !mBaked[i] )

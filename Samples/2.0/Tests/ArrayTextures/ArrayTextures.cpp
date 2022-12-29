@@ -28,14 +28,14 @@ namespace Demo
 {
     class ArrayTexturesGraphicsSystem : public GraphicsSystem
     {
-        virtual Ogre::CompositorWorkspace *setupCompositor()
+        Ogre::CompositorWorkspace *setupCompositor() override
         {
             Ogre::CompositorManager2 *compositorManager = mRoot->getCompositorManager2();
             return compositorManager->addWorkspace( mSceneManager, mRenderWindow->getTexture(), mCamera,
                                                     "Tests/ArrayTexturesWorkspace", true );
         }
 
-        virtual void setupResources( void )
+        void setupResources() override
         {
             GraphicsSystem::setupResources();
 
@@ -86,5 +86,5 @@ namespace Demo
         delete graphicsGameState;
     }
 
-    const char *MainEntryPoints::getWindowTitle( void ) { return "Test texture of Arrays"; }
+    const char *MainEntryPoints::getWindowTitle() { return "Test texture of Arrays"; }
 }  // namespace Demo

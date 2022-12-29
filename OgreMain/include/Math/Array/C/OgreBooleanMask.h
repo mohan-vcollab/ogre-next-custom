@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -30,7 +30,7 @@ THE SOFTWARE.
 #define _C_BooleanMask_H_
 
 #ifndef __BooleanMask_H__
-    #error "Don't include this file directly. include Math/Array/OgreBooleanMask.h"
+#    error "Don't include this file directly. include Math/Array/OgreBooleanMask.h"
 #endif
 
 namespace Ogre
@@ -40,27 +40,28 @@ namespace Ogre
     public:
         enum
         {
-            MASK_NONE           = 0,
-            MASK_X              = 1,
-            NUM_MASKS           = 2
+            MASK_NONE = 0,
+            MASK_X = 1,
+            NUM_MASKS = 2
         };
+
     public:
         inline static ArrayMaskR getMask( bool x );
         inline static ArrayMaskR getMask( bool booleans[1] );
 
-        inline static ArrayMaskR getAllSetMask(void);
+        inline static ArrayMaskR getAllSetMask();
 
         /// Returns true if alls bit in mask0[i] and mask1[i] are set.
         inline static bool allBitsSet( bool mask0[1], bool mask1[1] );
 
         /** Converts a SIMD mask into a mask that fits in 32-bit number
         @remarks
-            @See IS_SET_MASK_X & co. to read the mask, since the result may need
+            See IS_SET_MASK_X & co. to read the mask, since the result may need
             byteswapping in some architectures (i.e. SSE2)
         */
         inline static uint32 getScalarMask( ArrayMaskR mask );
     };
-}
+}  // namespace Ogre
 
 #include "OgreBooleanMask.inl"
 

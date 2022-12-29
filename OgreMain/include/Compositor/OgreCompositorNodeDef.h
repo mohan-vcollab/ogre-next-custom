@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -31,22 +31,22 @@ THE SOFTWARE.
 
 #include "OgrePrerequisites.h"
 
-#include "Compositor/Pass/OgreCompositorPassDef.h"
 #include "Compositor/OgreTextureDefinition.h"
+#include "Compositor/Pass/OgreCompositorPassDef.h"
 
 #include "OgreHeaderPrefix.h"
 
 namespace Ogre
 {
     /** \addtogroup Core
-    *  @{
-    */
+     *  @{
+     */
     /** \addtogroup Effects
-    *  @{
-    */
+     *  @{
+     */
 
-    typedef vector<uint32>::type                ChannelMappings;
-    typedef vector<CompositorTargetDef>::type   CompositorTargetDefVec;
+    typedef vector<uint32>::type              ChannelMappings;
+    typedef vector<CompositorTargetDef>::type CompositorTargetDefVec;
 
     /** Compositor nodes are the core subject of compositing.
     @par
@@ -58,7 +58,7 @@ namespace Ogre
         pass them to the output channels.
     @par
         How nodes input and output channels are wired together depends on the Workspace (See
-        @CompositorWorkspace and @CompositorWorkspaceDef)
+        CompositorWorkspace and CompositorWorkspaceDef)
         A node cannot receive input from two nodes in the same channel, but it can send output
         to more than one node using the same output channel.
     @par
@@ -66,8 +66,8 @@ namespace Ogre
         and unless it is disabled, the Compositor will be unable to render.
     @par
         The other core feature of nodes (besides textures and channels) is that they perform
-        passes on RTs. A pass is the basic way to render: it can be a @PASS_SCENE, @PASS_QUAD,
-        @PASS_CLEAR, @PASS_STENCIL, @PASS_RESOLVE
+        passes on RTs. A pass is the basic way to render: it can be a #PASS_SCENE, #PASS_QUAD,
+        #PASS_CLEAR, #PASS_STENCIL, #PASS_RESOLVE
     @par
         This is the definition. For the instantiation, @see CompositorNode
     @remarks
@@ -82,7 +82,7 @@ namespace Ogre
     protected:
         friend class CompositorNode;
 
-        IdString    mName;
+        IdString mName;
 
         /** Tells where to grab the RenderTarget from for the output channel.
             They can come either from an input channel, or from local textures.
@@ -90,30 +90,34 @@ namespace Ogre
             to determine whether it comes from the input channel, the local texture, or
             it is global.
         */
-        ChannelMappings         mOutChannelMapping;
-        IdStringVec             mOutBufferChannelMapping;
-        CompositorTargetDefVec  mTargetPasses;
+        ChannelMappings        mOutChannelMapping;
+        IdStringVec            mOutBufferChannelMapping;
+        CompositorTargetDefVec mTargetPasses;
 
-        bool        mStartEnabled;
-        String      mNameStr;
+        bool   mStartEnabled;
+        String mNameStr;
 
         CompositorManager2 *mCompositorManager;
 
     public:
-        IdString    mCustomIdentifier;
+        IdString mCustomIdentifier;
 
         CompositorNodeDef( const String &name, CompositorManager2 *compositorManager ) :
-                TextureDefinitionBase( TEXTURE_LOCAL ),
-                mName( name ), mStartEnabled( true ), mNameStr( name ),
-                mCompositorManager( compositorManager ) {}
+            TextureDefinitionBase( TEXTURE_LOCAL ),
+            mName( name ),
+            mStartEnabled( true ),
+            mNameStr( name ),
+            mCompositorManager( compositorManager )
+        {
+        }
         virtual ~CompositorNodeDef() {}
 
-        IdString getName(void) const                        { return mName; }
-        String getNameStr(void) const                       { return mNameStr; }
+        IdString getName() const { return mName; }
+        String   getNameStr() const { return mNameStr; }
 
         /// Whether the node should be start as enabled when instantiated
-        void setStartEnabled( bool enabled )                { mStartEnabled = enabled; }
-        bool getStartEnabled(void ) const                   { return mStartEnabled; }
+        void setStartEnabled( bool enabled ) { mStartEnabled = enabled; }
+        bool getStartEnabled() const { return mStartEnabled; }
 
         /// See http://www.research.att.com/~bs/bs_faq2.html#overloadderived
         using TextureDefinitionBase::getTextureSource;
@@ -143,7 +147,7 @@ namespace Ogre
         @param numPasses
             The number of passes expected to contain.
         */
-        void setNumTargetPass( size_t numPasses )           { mTargetPasses.reserve( numPasses ); }
+        void setNumTargetPass( size_t numPasses ) { mTargetPasses.reserve( numPasses ); }
 
         /** Adds a new Target pass.
         @remarks
@@ -153,30 +157,30 @@ namespace Ogre
             We need the full name, not just the hash; so we can check whether it has the global_ prefix
         @param rtIndex
             The RT to address if it is intended to use with a 3D texture (or a cubemap or a 2D Array)
-            @See CompositorPassDef::mRtIndex. Default: 0
+            See CompositorPassDef::mRtIndex. Default: 0
         */
-        CompositorTargetDef* addTargetPass( const String &renderTargetName, uint32 rtIndex=0 );
+        CompositorTargetDef *addTargetPass( const String &renderTargetName, uint32 rtIndex = 0 );
 
         /// Retrieves an existing pass by it's given index.
-        CompositorTargetDef* getTargetPass( size_t passIndex )  { return &mTargetPasses[passIndex]; }
+        CompositorTargetDef *getTargetPass( size_t passIndex ) { return &mTargetPasses[passIndex]; }
 
         /// Gets the number of target passes in this node.
-        size_t getNumTargetPasses(void) const                   { return mTargetPasses.size(); }
+        size_t getNumTargetPasses() const { return mTargetPasses.size(); }
 
         /// Calculates the total number of passes in this node.
-        size_t calculateNumPasses( void ) const;
+        size_t calculateNumPasses() const;
 
         /** Reserves enough memory for all output channel mappings (efficient allocation, better than
             using linked lists or other containers with two level of indirections)
         @remarks
             Calling this function is not obligatory, but recommended
-        @param numPasses
+        @param numOuts
             The number of output channels expected to contain.
         */
-        void setNumOutputChannels( size_t numOuts )         { mOutChannelMapping.reserve( numOuts ); }
+        void setNumOutputChannels( size_t numOuts ) { mOutChannelMapping.reserve( numOuts ); }
 
         /// Returns the number of output channels
-        size_t getNumOutputChannels(void) const             { return mOutChannelMapping.size(); }
+        size_t getNumOutputChannels() const { return mOutChannelMapping.size(); }
 
         /** Maps the output channel to the given texture name, which can be either a
             local texture or a reference to an input channel. Global textures can't
@@ -196,17 +200,19 @@ namespace Ogre
         void mapOutputChannel( size_t outChannel, IdString textureName );
 
         /// @copydoc TextureDefinitionBase::removeTexture
-        virtual void removeTexture( IdString name );
+        void removeTexture( IdString name ) override;
 
         /** Reserves enough memory for all output channel mappings (efficient allocation, better
             than using linked lists or other containers with two level of indirections)
         @remarks
             Calling this function is not obligatory, but recommended
-        @param numPasses
+        @param numOuts
             The number of output buffer channels expected to contain.
         */
         void setNumOutputBufferChannels( size_t numOuts )
-                                                { mOutBufferChannelMapping.reserve( numOuts ); }
+        {
+            mOutBufferChannelMapping.reserve( numOuts );
+        }
 
         /** Maps the output channel to the given buffer name which can be either a
             local buffer or a reference to an input channel. Global buffers can't
@@ -219,7 +225,7 @@ namespace Ogre
             channel name hasn't been set yet (declaration order is important!).
         @param outChannel
             Output channel # to map
-        @param textureName
+        @param bufferName
             Name of the buffer
         */
         void mapOutputBufferChannel( size_t outChannel, IdString bufferName );
@@ -234,12 +240,12 @@ namespace Ogre
         */
         size_t getPassNumber( const CompositorPassDef *passDef ) const;
 
-        CompositorManager2* getCompositorManager(void) const { return mCompositorManager; }
+        CompositorManager2 *getCompositorManager() const { return mCompositorManager; }
     };
 
     /** @} */
     /** @} */
-}
+}  // namespace Ogre
 
 #include "OgreHeaderSuffix.h"
 

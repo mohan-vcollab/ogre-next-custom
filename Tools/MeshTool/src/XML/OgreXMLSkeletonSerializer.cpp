@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -118,7 +118,7 @@ namespace v1 {
             bonElem != 0; bonElem = bonElem->NextSiblingElement())
         {
             String name = bonElem->Attribute("name");
-            int id = StringConverter::parseInt(bonElem->Attribute("id"));               
+            unsigned short id = StringConverter::parseUnsignedShort(bonElem->Attribute("id"));
             skel->createBone(name,id) ;
         }
     }
@@ -258,7 +258,7 @@ namespace v1 {
             
             
             // lecture des tracks
-            int trackIndex = 0;
+            unsigned short trackIndex = 0;
             TiXmlElement* tracksNode = animElem->FirstChildElement("tracks");
             
             for (TiXmlElement* trackElem = tracksNode->FirstChildElement("track"); trackElem != 0; trackElem = trackElem->NextSiblingElement())

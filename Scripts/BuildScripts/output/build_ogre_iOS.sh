@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OGRE_BRANCH_NAME="v2-3"
+OGRE_BRANCH_NAME="master"
 
 mkdir Ogre
 cd Ogre
@@ -22,7 +22,7 @@ cmake --build . --target install --config RelWithDebInfo || exit $?
 cd ../../
 if test ! -d ogre-next; then
 	mkdir ogre-next
-	echo "--- Cloning Ogre-Next v2-3 ---"
+	echo "--- Cloning Ogre-Next master ---"
 	git clone --branch ${OGRE_BRANCH_NAME} https://github.com/OGRECave/ogre-next || exit $?
 fi
 cd ogre-next
@@ -33,7 +33,7 @@ fi
 mkdir -p build_iOS
 cd build_iOS
 echo "--- Configuring Ogre-Next ---"
-cmake -D OGRE_USE_BOOST=0-D OGRE_CONFIG_THREAD_PROVIDER=0 \
+cmake -D OGRE_CONFIG_THREAD_PROVIDER=0 \
 -D OGRE_CONFIG_THREADS=0 \
 -D OGRE_BUILD_COMPONENT_SCENE_FORMAT=0 \
 -D OGRE_BUILD_SAMPLES2=0 \

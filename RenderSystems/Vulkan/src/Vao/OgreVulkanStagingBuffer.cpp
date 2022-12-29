@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
 (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org
 
@@ -198,6 +198,11 @@ namespace Ogre
     {
         assert( mUploadOnly );
 
+#ifdef OGRE_VK_WORKAROUND_PVR_ALIGNMENT
+        if( Workarounds::mPowerVRAlignment )
+            sizeBytes = alignToNextMultiple<size_t>( sizeBytes, Workarounds::mPowerVRAlignment );
+#endif
+
         mMappingCount = sizeBytes;
 
         OGRE_ASSERT_MEDIUM( mUnmapTicket == std::numeric_limits<size_t>::max() &&
@@ -245,6 +250,12 @@ namespace Ogre
             region.srcOffset = mInternalBufferStart + mMappingStart + dst.srcOffset;
             region.dstOffset = dstOffset;
             region.size = dst.length;
+#ifdef OGRE_VK_WORKAROUND_PVR_ALIGNMENT
+            OGRE_ASSERT_HIGH( !Workarounds::mPowerVRAlignment ||
+                              ( region.srcOffset % Workarounds::mPowerVRAlignment ) == 0u );
+            OGRE_ASSERT_HIGH( !Workarounds::mPowerVRAlignment ||
+                              ( region.dstOffset % Workarounds::mPowerVRAlignment ) == 0u );
+#endif
             vkCmdCopyBuffer( cmdBuffer, mVboName, bufferInterface->getVboName(), 1u, &region );
         }
 
@@ -269,9 +280,8 @@ namespace Ogre
                                                 size_t srcLength )
     {
         size_t freeRegionOffset = getFreeDownloadRegion( srcLength );
-        size_t errorCode = (size_t)-1;
 
-        if( freeRegionOffset == errorCode )
+        if( freeRegionOffset == std::numeric_limits<size_t>::max() )
         {
             OGRE_EXCEPT(
                 Exception::ERR_INVALIDPARAMS,
@@ -297,6 +307,12 @@ namespace Ogre
         region.srcOffset = source->_getFinalBufferStart() * source->getBytesPerElement() + srcOffset;
         region.dstOffset = mInternalBufferStart + freeRegionOffset;
         region.size = srcLength;
+#ifdef OGRE_VK_WORKAROUND_PVR_ALIGNMENT
+        OGRE_ASSERT_HIGH( !Workarounds::mPowerVRAlignment ||
+                          ( region.srcOffset % Workarounds::mPowerVRAlignment ) == 0u );
+        OGRE_ASSERT_HIGH( !Workarounds::mPowerVRAlignment ||
+                          ( region.dstOffset % Workarounds::mPowerVRAlignment ) == 0u );
+#endif
         vkCmdCopyBuffer( device->mGraphicsQueue.mCurrentCmdBuffer, bufferInterface->getVboName(),
                          mVboName, 1u, &region );
 
@@ -331,7 +347,13 @@ namespace Ogre
         VkBufferCopy region;
         region.srcOffset = mInternalBufferStart + mMappingStart;
         region.dstOffset = lockStart + dstOffsetStart;
-        region.size = alignToNextMultiple( lockSize, 4u );
+        region.size = alignToNextMultiple<size_t>( lockSize, 4u );
+#ifdef OGRE_VK_WORKAROUND_PVR_ALIGNMENT
+        OGRE_ASSERT_HIGH( !Workarounds::mPowerVRAlignment ||
+                          ( region.srcOffset % Workarounds::mPowerVRAlignment ) == 0u );
+        OGRE_ASSERT_HIGH( !Workarounds::mPowerVRAlignment ||
+                          ( region.dstOffset % Workarounds::mPowerVRAlignment ) == 0u );
+#endif
         vkCmdCopyBuffer( device->mGraphicsQueue.mCurrentCmdBuffer, mVboName, dstBuffer, 1u, &region );
 
         if( mUploadOnly )
@@ -354,7 +376,7 @@ namespace Ogre
         // Vulkan has alignment restrictions of 4 bytes for offset and size in copyFromBuffer
         size_t freeRegionOffset = getFreeDownloadRegion( srcLength );
 
-        if( freeRegionOffset == ( size_t )( -1 ) )
+        if( freeRegionOffset == (size_t)( -1 ) )
         {
             OGRE_EXCEPT(
                 Exception::ERR_INVALIDPARAMS,
@@ -388,7 +410,13 @@ namespace Ogre
         VkBufferCopy region;
         region.srcOffset = srcOffset + srcOffsetStart;
         region.dstOffset = mInternalBufferStart + freeRegionOffset;
-        region.size = alignToNextMultiple( srcLength, 4u );
+        region.size = alignToNextMultiple<size_t>( srcLength, 4u );
+#ifdef OGRE_VK_WORKAROUND_PVR_ALIGNMENT
+        OGRE_ASSERT_HIGH( !Workarounds::mPowerVRAlignment ||
+                          ( region.srcOffset % Workarounds::mPowerVRAlignment ) == 0u );
+        OGRE_ASSERT_HIGH( !Workarounds::mPowerVRAlignment ||
+                          ( region.dstOffset % Workarounds::mPowerVRAlignment ) == 0u );
+#endif
         vkCmdCopyBuffer( device->mGraphicsQueue.mCurrentCmdBuffer, srcBuffer, mVboName, 1u, &region );
 
         return freeRegionOffset + extraOffset;

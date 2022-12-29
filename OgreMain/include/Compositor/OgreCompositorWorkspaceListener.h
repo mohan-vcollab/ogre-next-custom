@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -37,22 +37,22 @@ THE SOFTWARE.
 namespace Ogre
 {
     /** \addtogroup Core
-    *  @{
-    */
+     *  @{
+     */
     /** \addtogroup Effects
-    *  @{
-    */
+     *  @{
+     */
 
     class CompositorWorkspaceListener
     {
     public:
         /** Called before all nodes are going to be updated. Use this place to update your own,
             manually updated Workspaces without having to call
-            @CompositorWorkspace::_beginUpdate( forceBeginFrame=true )
+            CompositorWorkspace::_beginUpdate( forceBeginFrame=true )
         */
         virtual void workspacePreUpdate( CompositorWorkspace *workspace ) {}
         /** Called after all nodes has been updated.
-        */
+         */
         virtual void workspacePosUpdate( CompositorWorkspace *workspace ) {}
         /** Called early on in pass' execution. Happens before passPreExecute,
             before the pass has set anything.
@@ -92,19 +92,19 @@ namespace Ogre
             the RenderSystem and SceneManager to call the adequate begin/end calls
             Warning: Don't add/remove listeners to CompositorManager2 inside this function.
         */
-        virtual void allWorkspacesBeforeBeginUpdate(void) {}
+        virtual void allWorkspacesBeforeBeginUpdate() {}
 
         /** Called from CompositorManager2 (not CompositorWorkspace) when we're
             about to update all the workspaces (it's safe to update your own workspaces
             without calling _beginUpdate and _endUpdate)
             Warning: Don't add/remove listeners to CompositorManager2 inside this function.
         */
-        virtual void allWorkspacesBeginUpdate(void) {}
+        virtual void allWorkspacesBeginUpdate() {}
     };
 
     /** @} */
     /** @} */
-}
+}  // namespace Ogre
 
 #include "OgreHeaderSuffix.h"
 

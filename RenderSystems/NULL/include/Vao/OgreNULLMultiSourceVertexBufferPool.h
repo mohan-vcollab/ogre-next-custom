@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
 (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org
 
@@ -32,8 +32,8 @@ THE SOFTWARE.
 #include "OgreNULLPrerequisites.h"
 
 #ifdef _OGRE_MULTISOURCE_VBO
-#include "Vao/OgreMultiSourceVertexBufferPool.h"
-#include "Vao/OgreNULLVaoManager.h"
+#    include "Vao/OgreMultiSourceVertexBufferPool.h"
+#    include "Vao/OgreNULLVaoManager.h"
 
 namespace Ogre
 {
@@ -43,7 +43,7 @@ namespace Ogre
 
         NULLVaoManager::BlockVec mFreeBlocks;
 
-        /** @See NULLVaoManager::allocateVbo. This is very similar, except we don't have to deal with
+        /** @see NULLVaoManager::allocateVbo This is very similar, except we don't have to deal with
             stride changes (as the vertex format remains the same) and we can't request another
             pool if we're out of space (in other words, it's simpler).
         @param numVertices
@@ -61,17 +61,16 @@ namespace Ogre
         virtual void destroyVertexBuffersImpl( VertexBufferPackedVec &inOutVertexBuffers );
 
     public:
-        NULLMultiSourceVertexBufferPool( size_t vboPoolIndex,
-                                            const VertexElement2VecVec &vertexElementsBySource,
-                                            size_t maxVertices, BufferType bufferType,
-                                            size_t internalBufferStart,
-                                            VaoManager *vaoManager );
+        NULLMultiSourceVertexBufferPool( size_t                      vboPoolIndex,
+                                         const VertexElement2VecVec &vertexElementsBySource,
+                                         size_t maxVertices, BufferType bufferType,
+                                         size_t internalBufferStart, VaoManager *vaoManager );
         virtual ~NULLMultiSourceVertexBufferPool();
 
         void createVertexBuffers( VertexBufferPackedVec &outVertexBuffers, size_t numVertices,
-                                  void * const *initialData, bool keepAsShadow );
+                                  void *const *initialData, bool keepAsShadow );
     };
-}
+}  // namespace Ogre
 
 #endif
 #endif

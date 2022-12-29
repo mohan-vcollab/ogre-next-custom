@@ -1,6 +1,6 @@
 /*
   -----------------------------------------------------------------------------
-  This source file is part of OGRE
+  This source file is part of OGRE-Next
   (Object-oriented Graphics Rendering Engine)
   For the latest info, see http://www.ogre3d.org/
 
@@ -26,30 +26,27 @@ Copyright (c) 2000-2014 Torus Knot Software Ltd
   -----------------------------------------------------------------------------
 */
 
-#include "OgreRoot.h"
 #include "OgreGL3PlusPlugin.h"
+#include "OgreRoot.h"
 
 #ifndef OGRE_STATIC_LIB
 
 namespace Ogre
 {
-    static GL3PlusPlugin* plugin;
+    static GL3PlusPlugin *plugin;
 
-#    if __cplusplus >= 201103L
-    extern "C" void _OgreGL3PlusExport dllStartPlugin( const NameValuePairList *options ) noexcept( false )
-#    else
-    extern "C" void _OgreGL3PlusExport dllStartPlugin( const NameValuePairList *options ) throw( Exception )
-#    endif
+    extern "C" void _OgreGL3PlusExport
+    dllStartPlugin( const NameValuePairList *options ) noexcept( false )
     {
         plugin = OGRE_NEW GL3PlusPlugin();
         Root::getSingleton().installPlugin( plugin, options );
     }
 
-    extern "C" void _OgreGL3PlusExport dllStopPlugin(void)
+    extern "C" void _OgreGL3PlusExport dllStopPlugin( void )
     {
-        Root::getSingleton().uninstallPlugin(plugin);
+        Root::getSingleton().uninstallPlugin( plugin );
         OGRE_DELETE plugin;
     }
-}
+}  // namespace Ogre
 
 #endif

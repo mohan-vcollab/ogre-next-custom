@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -66,7 +66,7 @@ namespace Ogre
     //-----------------------------------------------------------------------------------
     VulkanRenderPassDescriptor::~VulkanRenderPassDescriptor() { releaseFbo(); }
     //-----------------------------------------------------------------------------------
-    void VulkanRenderPassDescriptor::checkRenderWindowStatus( void )
+    void VulkanRenderPassDescriptor::checkRenderWindowStatus()
     {
         if( ( mNumColourEntries > 0 && mColour[0].texture->isRenderWindowSpecific() ) ||
             ( mDepth.texture && mDepth.texture->isRenderWindowSpecific() ) ||
@@ -85,7 +85,7 @@ namespace Ogre
             {
                 OGRE_EXCEPT( Exception::ERR_INVALIDPARAMS,
                              "Cannot mix RenderWindow colour texture with depth or stencil buffer "
-                             "that aren't for RenderWindows, or viceversa",
+                             "that aren't for RenderWindows, or vice-versa",
                              "VulkanRenderPassDescriptor::checkRenderWindowStatus" );
             }
         }
@@ -93,7 +93,7 @@ namespace Ogre
         calculateSharedKey();
     }
     //-----------------------------------------------------------------------------------
-    void VulkanRenderPassDescriptor::calculateSharedKey( void )
+    void VulkanRenderPassDescriptor::calculateSharedKey()
     {
         VulkanFrameBufferDescKey key( *this );
         VulkanFrameBufferDescMap &frameBufferDescMap = mRenderSystem->_getFrameBufferDescMap();
@@ -115,7 +115,7 @@ namespace Ogre
         calculateSharedFlushOnlyKey();
     }
     //-----------------------------------------------------------------------------------
-    void VulkanRenderPassDescriptor::calculateSharedFlushOnlyKey( void )
+    void VulkanRenderPassDescriptor::calculateSharedFlushOnlyKey()
     {
         FrameBufferDescKey key( *this );
         VulkanFlushOnlyDescMap &frameBufferDescMap = mRenderSystem->_getFlushOnlyDescMap();
@@ -625,7 +625,7 @@ namespace Ogre
         }
     }
     //-----------------------------------------------------------------------------------
-    void VulkanRenderPassDescriptor::releaseFbo( void )
+    void VulkanRenderPassDescriptor::releaseFbo()
     {
         {
             VulkanFrameBufferDescMap &frameBufferDescMap = mRenderSystem->_getFrameBufferDescMap();
@@ -868,7 +868,7 @@ namespace Ogre
         return entriesToFlush;
     }
     //-----------------------------------------------------------------------------------
-    bool VulkanRenderPassDescriptor::cannotInterruptRendering( void ) const
+    bool VulkanRenderPassDescriptor::cannotInterruptRendering() const
     {
         bool cannotInterrupt = false;
 
@@ -967,7 +967,7 @@ namespace Ogre
             static bool warnedOnce = false;
             if( !warnedOnce || cannotInterrupt )
             {
-                mNumCallstackEntries = backtrace( mCallstackBacktrace, 32 );
+                mNumCallstackEntries = static_cast<size_t>( backtrace( mCallstackBacktrace, 32 ) );
                 warnedOnce = true;
             }
 #endif

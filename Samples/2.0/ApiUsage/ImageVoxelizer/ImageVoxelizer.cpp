@@ -22,16 +22,16 @@ int mainApp( int argc, const char *argv[] )
 
 namespace Demo
 {
-    class ImageVoxelizerGraphicsSystem : public GraphicsSystem
+    class ImageVoxelizerGraphicsSystem final : public GraphicsSystem
     {
-        virtual Ogre::CompositorWorkspace *setupCompositor()
+        Ogre::CompositorWorkspace *setupCompositor() override
         {
             Ogre::CompositorManager2 *compositorManager = mRoot->getCompositorManager2();
             return compositorManager->addWorkspace( mSceneManager, mRenderWindow->getTexture(), mCamera,
                                                     "PbsMaterialsWorkspace", true );
         }
 
-        virtual void setupResources( void )
+        void setupResources() override
         {
             GraphicsSystem::setupResources();
 
@@ -109,7 +109,7 @@ namespace Demo
         delete graphicsGameState;
     }
 
-    const char *MainEntryPoints::getWindowTitle( void )
+    const char *MainEntryPoints::getWindowTitle()
     {
         return "CIVCT: Cascaded Image Voxel Cone Tracing (Real Time Global Illumination Technique)";
     }

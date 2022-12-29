@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -29,35 +29,35 @@ THE SOFTWARE.
 #ifndef _OgreCompositorPassDepthCopyDef_H_
 #define _OgreCompositorPassDepthCopyDef_H_
 
-#include "OgreHeaderPrefix.h"
-
 #include "../OgreCompositorPassDef.h"
 #include "OgreCommon.h"
+
+#include "OgreHeaderPrefix.h"
 
 namespace Ogre
 {
     class CompositorNodeDef;
 
     /** \addtogroup Core
-    *  @{
-    */
+     *  @{
+     */
     /** \addtogroup Effects
-    *  @{
-    */
+     *  @{
+     */
 
     class _OgreExport CompositorPassDepthCopyDef : public CompositorPassDef
     {
         friend class CompositorPassDepthCopy;
+
     protected:
         /// Name of the src RT (can come from input channel, local textures, or global ones)
-        IdString    mSrcDepthTextureName;
+        IdString mSrcDepthTextureName;
         /// Name of the dst RT (can come from input channel, local textures, or global ones)
-        IdString    mDstDepthTextureName;
-        CompositorNodeDef   *mParentNodeDef;
+        IdString           mDstDepthTextureName;
+        CompositorNodeDef *mParentNodeDef;
 
     public:
-
-        CompositorPassDepthCopyDef( CompositorNodeDef *parentNodeDef,
+        CompositorPassDepthCopyDef( CompositorNodeDef   *parentNodeDef,
                                     CompositorTargetDef *parentTargetDef ) :
             CompositorPassDef( PASS_DEPTHCOPY, parentTargetDef ),
             mParentNodeDef( parentNodeDef )
@@ -65,14 +65,14 @@ namespace Ogre
         }
 
         /** Indicates the pass to change the texture units to use the specified texture sources.
-            @See QuadTextureSource for params
+            See CompositorPassQuadDef::QuadTextureSource for params
         */
         void setDepthTextureCopy( const String &srcTextureName, const String &dstTextureName );
     };
 
     /** @} */
     /** @} */
-}
+}  // namespace Ogre
 
 #include "OgreHeaderSuffix.h"
 

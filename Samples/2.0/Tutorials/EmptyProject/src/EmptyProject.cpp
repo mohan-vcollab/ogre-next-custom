@@ -1,39 +1,39 @@
 
-#include "GraphicsSystem.h"
 #include "EmptyProjectGameState.h"
+#include "GraphicsSystem.h"
 
-#include "OgreSceneManager.h"
-#include "OgreCamera.h"
-#include "OgreRoot.h"
-#include "OgreWindow.h"
-#include "OgreConfigFile.h"
 #include "Compositor/OgreCompositorManager2.h"
+#include "OgreCamera.h"
+#include "OgreConfigFile.h"
+#include "OgreRoot.h"
+#include "OgreSceneManager.h"
+#include "OgreWindow.h"
 
-//Declares WinMain / main
+// Declares WinMain / main
 #include "MainEntryPointHelper.h"
 #include "System/MainEntryPoints.h"
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_LINUX
-    #include <unistd.h>
-    #include <sys/types.h>
-    #include <sys/stat.h>
-    #include <pwd.h>
-    #include <errno.h>
+#    include <errno.h>
+#    include <pwd.h>
+#    include <sys/stat.h>
+#    include <sys/types.h>
+#    include <unistd.h>
 #endif
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-    #include "shlobj.h"
+#    include "shlobj.h"
 #endif
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE || OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS
-#	include <Foundation/Foundation.h>
+#    include <Foundation/Foundation.h>
 #endif
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE
-#	include "OSX/macUtils.h"
+#    include "OSX/macUtils.h"
 #endif
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS
-#	include "iOS/macUtils.h"
+#    include "iOS/macUtils.h"
 #endif
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
@@ -47,25 +47,25 @@ int mainApp( int argc, const char *argv[] )
 
 namespace Demo
 {
-    class EmptyProjectGraphicsSystem : public GraphicsSystem
+    class EmptyProjectGraphicsSystem final : public GraphicsSystem
     {
-        virtual Ogre::CompositorWorkspace* setupCompositor()
+        Ogre::CompositorWorkspace *setupCompositor() override
         {
             return GraphicsSystem::setupCompositor();
         }
 
-        virtual void setupResources(void)
+        void setupResources() override
         {
             GraphicsSystem::setupResources();
 
             Ogre::ConfigFile cf;
-            cf.load(mResourcePath + "resources2.cfg");
+            cf.load( mResourcePath + "resources2.cfg" );
 
             Ogre::String dataFolder = cf.getSetting( "DoNotUseAsResource", "Hlms", "" );
 
             if( dataFolder.empty() )
                 dataFolder = "./";
-            else if( *(dataFolder.end() - 1) != '/' )
+            else if( *( dataFolder.end() - 1 ) != '/' )
                 dataFolder += "/";
 
             dataFolder += "2.0/scripts/materials/PbsMaterials";
@@ -74,8 +74,7 @@ namespace Demo
         }
 
     public:
-        EmptyProjectGraphicsSystem( GameState *gameState ) :
-            GraphicsSystem( gameState )
+        EmptyProjectGraphicsSystem( GameState *gameState ) : GraphicsSystem( gameState )
         {
 #if OGRE_PLATFORM == OGRE_PLATFORM_ANDROID
             mResourcePath = "Data/";
@@ -87,7 +86,7 @@ namespace Demo
             mResourcePath = "../Data/";
 #endif
 
-            //It's recommended that you set this path to:
+            // It's recommended that you set this path to:
             //	%APPDATA%/EmptyProject/ on Windows
             //	~/.config/EmptyProject/ on Linux
             //	macCachePath() + "/EmptyProject/" (NSCachesDirectory) on Apple -> Important because
@@ -98,45 +97,45 @@ namespace Demo
             //	reset.
             //  Obviously you can replace "EmptyProject" by your app's name.
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-            mWriteAccessFolder =  + "/";
+            mWriteAccessFolder = +"/";
             TCHAR path[MAX_PATH];
-            if( SUCCEEDED( SHGetFolderPath( NULL, CSIDL_APPDATA, NULL,
-                                            SHGFP_TYPE_CURRENT, path ) != S_OK ) )
+            if( SUCCEEDED( SHGetFolderPath( NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, path ) !=
+                           S_OK ) )
             {
-                //Need to convert to OEM codepage so that fstream can
-                //use it properly on international systems.
-        #if defined(_UNICODE) || defined(UNICODE)
-                int size_needed = WideCharToMultiByte( CP_OEMCP, 0, path, (int)wcslen(path),
-                                                       NULL, 0, NULL, NULL );
+                // Need to convert to OEM codepage so that fstream can
+                // use it properly on international systems.
+#    if defined( _UNICODE ) || defined( UNICODE )
+                int size_needed =
+                    WideCharToMultiByte( CP_OEMCP, 0, path, (int)wcslen( path ), NULL, 0, NULL, NULL );
                 mWriteAccessFolder = std::string( size_needed, 0 );
-                WideCharToMultiByte( CP_OEMCP, 0, path, (int)wcslen(path),
-                                     &mWriteAccessFolder[0], size_needed, NULL, NULL );
-        #else
+                WideCharToMultiByte( CP_OEMCP, 0, path, (int)wcslen( path ), &mWriteAccessFolder[0],
+                                     size_needed, NULL, NULL );
+#    else
                 TCHAR oemPath[MAX_PATH];
                 CharToOem( path, oemPath );
                 mWriteAccessFolder = std::string( oemPath );
-        #endif
+#    endif
                 mWriteAccessFolder += "/EmptyProject/";
 
-                //Attempt to create directory where config files go
+                // Attempt to create directory where config files go
                 if( !CreateDirectoryA( mWriteAccessFolder.c_str(), NULL ) &&
                     GetLastError() != ERROR_ALREADY_EXISTS )
                 {
-                    //Couldn't create directory (no write access?),
-                    //fall back to current working dir
+                    // Couldn't create directory (no write access?),
+                    // fall back to current working dir
                     mWriteAccessFolder = "";
                 }
             }
 #elif OGRE_PLATFORM == OGRE_PLATFORM_LINUX
-            const char *homeDir = getenv("HOME");
+            const char *homeDir = getenv( "HOME" );
             if( homeDir == 0 )
                 homeDir = getpwuid( getuid() )->pw_dir;
             mWriteAccessFolder = homeDir;
             mWriteAccessFolder += "/.config";
-            int result = mkdir( mWriteAccessFolder.c_str(), S_IRWXU|S_IRWXG );
+            int result = mkdir( mWriteAccessFolder.c_str(), S_IRWXU | S_IRWXG );
             int errorReason = errno;
 
-            //Create "~/.config"
+            // Create "~/.config"
             if( result && errorReason != EEXIST )
             {
                 printf( "Error. Failing to create path '%s'. Do you have access rights?",
@@ -145,9 +144,9 @@ namespace Demo
             }
             else
             {
-                //Create "~/.config/EmptyProject"
+                // Create "~/.config/EmptyProject"
                 mWriteAccessFolder += "/EmptyProject/";
-                result = mkdir( mWriteAccessFolder.c_str(), S_IRWXU|S_IRWXG );
+                result = mkdir( mWriteAccessFolder.c_str(), S_IRWXU | S_IRWXG );
                 errorReason = errno;
 
                 if( result && errorReason != EEXIST )
@@ -163,7 +162,7 @@ namespace Demo
                                                         appropriateForURL:nil
                                                                    create:YES
                                                                     error:nil];
-            // Create "pathToCache/Alliance-Airwar"
+            // Create "pathToCache/EmptyProject"
             mWriteAccessFolder = Ogre::String( libUrl.absoluteURL.path.UTF8String ) + "/EmptyProject/";
             const int result = mkdir( mWriteAccessFolder.c_str(), S_IRWXU | S_IRWXG );
             const int errorReason = errno;
@@ -180,11 +179,9 @@ namespace Demo
 
     void MainEntryPoints::createSystems( GameState **outGraphicsGameState,
                                          GraphicsSystem **outGraphicsSystem,
-                                         GameState **outLogicGameState,
-                                         LogicSystem **outLogicSystem )
+                                         GameState **outLogicGameState, LogicSystem **outLogicSystem )
     {
-        EmptyProjectGameState *gfxGameState = new EmptyProjectGameState(
-        "Empty Project Example" );
+        EmptyProjectGameState *gfxGameState = new EmptyProjectGameState( "Empty Project Example" );
 
         GraphicsSystem *graphicsSystem = new EmptyProjectGraphicsSystem( gfxGameState );
 
@@ -194,17 +191,12 @@ namespace Demo
         *outGraphicsSystem = graphicsSystem;
     }
 
-    void MainEntryPoints::destroySystems( GameState *graphicsGameState,
-                                          GraphicsSystem *graphicsSystem,
-                                          GameState *logicGameState,
-                                          LogicSystem *logicSystem )
+    void MainEntryPoints::destroySystems( GameState *graphicsGameState, GraphicsSystem *graphicsSystem,
+                                          GameState *logicGameState, LogicSystem *logicSystem )
     {
         delete graphicsSystem;
         delete graphicsGameState;
     }
 
-    const char* MainEntryPoints::getWindowTitle(void)
-    {
-        return "Empty Project Sample";
-    }
-}
+    const char *MainEntryPoints::getWindowTitle() { return "Empty Project Sample"; }
+}  // namespace Demo

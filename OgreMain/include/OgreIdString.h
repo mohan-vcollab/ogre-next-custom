@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
 (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -30,19 +30,31 @@ THE SOFTWARE.
 #define __OgreIdString__
 
 #include "OgrePrerequisites.h"
-#include "Hash/MurmurHash3.h"
-#include <stdio.h>  // sprintf
-#include <string.h> // strlen
+
+#include <inttypes.h>  // PRIx64
+#include <stdio.h>     // sprintf
+#include <string.h>    // strlen
 #include <string>
 
-#define OGRE_HASH_FUNC MurmurHash3_x86_32
-#define OGRE_HASH_BITS 32
+#include "Hash/MurmurHash3.h"
 
-#if OGRE_DEBUG_MODE == 0 && OGRE_IDSTRING_ALWAYS_READABLE == 0
-    #define OGRE_COPY_DEBUG_STRING( _Expression ) ((void)0)
-    #define OGRE_APPEND_DEBUG_STRING( _Expression ) ((void)0)
+#ifdef OGRE_IDSTRING_USE_128
+#    if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_32
+#        define OGRE_HASH_FUNC MurmurHash3_x86_128
+#    else
+#        define OGRE_HASH_FUNC MurmurHash3_x64_128
+#    endif
+#    define OGRE_HASH_BITS 128
 #else
-    #include <assert.h>
+#    define OGRE_HASH_FUNC MurmurHash3_x86_32
+#    define OGRE_HASH_BITS 32
+#endif
+
+#if OGRE_DEBUG_MODE < OGRE_DEBUG_MEDIUM && OGRE_IDSTRING_ALWAYS_READABLE == 0
+#    define OGRE_COPY_DEBUG_STRING( _Expression ) ( (void)0 )
+#    define OGRE_APPEND_DEBUG_STRING( _Expression ) ( (void)0 )
+#else
+#    include "OgreAssert.h"
 #endif
 
 namespace Ogre
@@ -86,7 +98,7 @@ namespace Ogre
         and happen to also hash to the same number.
     @par
         In practice we truncate to 32 bytes. If your fear this is too little for you and
-        also fear about collisions, increase @OGRE_DEBUG_STR_SIZE
+        also fear about collisions, increase OGRE_DEBUG_STR_SIZE
     @author
         Matias N. Goldberg
     @version
@@ -94,81 +106,86 @@ namespace Ogre
     */
     struct IdString
     {
-        static const uint32_t Seed = 0x3A8EFA67; //It's a prime number :)
+        static const uint32_t Seed = 0x3A8EFA67;  // It's a prime number :)
 
-        uint32      mHash;
-#if OGRE_DEBUG_MODE || OGRE_IDSTRING_ALWAYS_READABLE
-        #define OGRE_DEBUG_STR_SIZE 32
-        char        mDebugString[OGRE_DEBUG_STR_SIZE];
+#ifdef OGRE_IDSTRING_USE_128
+        uint64 mHash[2];
+#else
+        uint32 mHash;
 #endif
 
-        IdString() : mHash( 0 )
+#if OGRE_DEBUG_MODE >= OGRE_DEBUG_MEDIUM || OGRE_IDSTRING_ALWAYS_READABLE
+#    define OGRE_DEBUG_STR_SIZE 32
+        char mDebugString[OGRE_DEBUG_STR_SIZE];
+#endif
+
+        IdString() : mHash{}
         {
-#if OGRE_DEBUG_MODE || OGRE_IDSTRING_ALWAYS_READABLE
+#if OGRE_DEBUG_MODE >= OGRE_DEBUG_MEDIUM || OGRE_IDSTRING_ALWAYS_READABLE
             mDebugString[0] = '\0';
 #endif
         }
 
-        IdString( const char *string ) : mHash( 0 )
+        IdString( const char *string ) : mHash{}
         {
-            OGRE_HASH_FUNC( string, static_cast<int>(strlen( string )), Seed, &mHash );
+            OGRE_HASH_FUNC( string, static_cast<int>( strlen( string ) ), Seed, &mHash );
             OGRE_COPY_DEBUG_STRING( string );
         }
 
-        IdString( const std::string &string ) : mHash( 0 )
+        IdString( const std::string &string ) : mHash{}
         {
-            OGRE_HASH_FUNC( string.c_str(), static_cast<int>(string.size()), Seed, &mHash );
+            OGRE_HASH_FUNC( string.c_str(), static_cast<int>( string.size() ), Seed, &mHash );
             OGRE_COPY_DEBUG_STRING( string );
         }
 
-        IdString( uint32 value ) : mHash( 0 )
+        IdString( uint32 value ) : mHash{}
         {
             OGRE_HASH_FUNC( &value, sizeof( value ), Seed, &mHash );
             OGRE_COPY_DEBUG_STRING( value );
         }
 
-#if OGRE_DEBUG_MODE || OGRE_IDSTRING_ALWAYS_READABLE
-        #if OGRE_COMPILER == OGRE_COMPILER_MSVC
-            #pragma warning( push )
-            #pragma warning( disable: 4996 ) //Unsecure CRT deprecation warning
-        #endif
+#if OGRE_DEBUG_MODE >= OGRE_DEBUG_MEDIUM || OGRE_IDSTRING_ALWAYS_READABLE
+#    if OGRE_COMPILER == OGRE_COMPILER_MSVC
+#        pragma warning( push )
+#        pragma warning( disable : 4996 )  // Unsecure CRT deprecation warning
+#    endif
 
         void OGRE_COPY_DEBUG_STRING( const char *string )
         {
             size_t strLength = strlen( string );
-            if( strLength > OGRE_DEBUG_STR_SIZE-1 )
+            if( strLength > OGRE_DEBUG_STR_SIZE - 1 )
             {
-                //Copy the last characters, not the first ones!
-                strncpy( mDebugString, string + strLength - (OGRE_DEBUG_STR_SIZE-1),
+                // Copy the last characters, not the first ones!
+                strncpy( mDebugString, string + strLength - ( OGRE_DEBUG_STR_SIZE - 1 ),
                          OGRE_DEBUG_STR_SIZE );
             }
             else
             {
                 strncpy( mDebugString, string, OGRE_DEBUG_STR_SIZE );
             }
-            mDebugString[OGRE_DEBUG_STR_SIZE-1] = '\0';
+            mDebugString[OGRE_DEBUG_STR_SIZE - 1] = '\0';
         }
 
         void OGRE_COPY_DEBUG_STRING( const std::string &string )
         {
             size_t strLength = string.size();
-            if( strLength > OGRE_DEBUG_STR_SIZE-1 )
+            if( strLength > OGRE_DEBUG_STR_SIZE - 1 )
             {
-                //Copy the last characters, not the first ones!
-                strncpy( mDebugString, string.c_str() + strLength - (OGRE_DEBUG_STR_SIZE-1),
+                // Copy the last characters, not the first ones!
+                strncpy( mDebugString, string.c_str() + strLength - ( OGRE_DEBUG_STR_SIZE - 1 ),
                          OGRE_DEBUG_STR_SIZE );
             }
             else
             {
                 strncpy( mDebugString, string.c_str(), OGRE_DEBUG_STR_SIZE );
             }
-            mDebugString[OGRE_DEBUG_STR_SIZE-1] = '\0';
+            mDebugString[OGRE_DEBUG_STR_SIZE - 1] = '\0';
         }
 
         void OGRE_COPY_DEBUG_STRING( uint32 value )
         {
             sprintf( mDebugString, "[Value 0x%.8x]", value );
-            mDebugString[OGRE_DEBUG_STR_SIZE-1] = '\0';
+            mDebugString[OGRE_DEBUG_STR_SIZE - 1] = '\0';
         }
 
         void OGRE_APPEND_DEBUG_STRING( const char *string )
@@ -179,84 +196,109 @@ namespace Ogre
             if( strLen0 + strLen1 < OGRE_DEBUG_STR_SIZE )
             {
                 strcat( mDebugString, string );
-                mDebugString[OGRE_DEBUG_STR_SIZE-1] = '\0';
+                mDebugString[OGRE_DEBUG_STR_SIZE - 1] = '\0';
             }
             else
             {
-                size_t newStart0    = (strLen0 >> 1);
-                size_t newLen0      = strLen0 - newStart0;
+                size_t newStart0 = ( strLen0 >> 1 );
+                size_t newLen0 = strLen0 - newStart0;
                 memmove( mDebugString, mDebugString + newStart0, newLen0 );
 
-                size_t newStart1    = 0;
-                size_t newLen1      = strLen1;
+                size_t newStart1 = 0;
+                size_t newLen1 = strLen1;
                 if( newLen0 + strLen1 >= OGRE_DEBUG_STR_SIZE )
                 {
-                    newLen1     = OGRE_DEBUG_STR_SIZE - newLen0 - 1;
-                    newStart1   = strLen1 - newLen1;
+                    newLen1 = OGRE_DEBUG_STR_SIZE - newLen0 - 1;
+                    newStart1 = strLen1 - newLen1;
                 }
 
                 memcpy( mDebugString + newLen0, string + newStart1, newLen1 );
-                mDebugString[OGRE_DEBUG_STR_SIZE-1] = '\0';
+                mDebugString[OGRE_DEBUG_STR_SIZE - 1] = '\0';
             }
         }
 
-        #if OGRE_COMPILER == OGRE_COMPILER_MSVC
-            #pragma warning( pop )
-        #endif
+#    if OGRE_COMPILER == OGRE_COMPILER_MSVC
+#        pragma warning( pop )
+#    endif
 #endif
 
-        void operator += ( IdString idString )
+        void operator+=( IdString idString )
         {
+#ifdef OGRE_IDSTRING_USE_128
+            uint64 doubleHash[4];
+            doubleHash[0] = mHash[0];
+            doubleHash[1] = mHash[1];
+            doubleHash[2] = idString.mHash[0];
+            doubleHash[3] = idString.mHash[1];
+#else
             uint32 doubleHash[2];
             doubleHash[0] = mHash;
             doubleHash[1] = idString.mHash;
+#endif
 
             OGRE_HASH_FUNC( &doubleHash, sizeof( doubleHash ), Seed, &mHash );
             OGRE_APPEND_DEBUG_STRING( idString.mDebugString );
         }
 
-        IdString operator + ( IdString idString ) const
+        IdString operator+( IdString idString ) const
         {
             IdString retVal( *this );
             retVal += idString;
             return retVal;
         }
 
-        bool operator < ( IdString idString ) const
+        bool operator<( IdString idString ) const
         {
-#if OGRE_DEBUG_MODE
-            //On highly debug builds, check for collisions
-            assert( !(mHash == idString.mHash &&
-                    strcmp( mDebugString, idString.mDebugString ) != 0) &&
-                    "Collision detected!" );
-#endif
+            // On highly debug builds, check for collisions
+#ifdef OGRE_IDSTRING_USE_128
+            OGRE_ASSERT_MEDIUM( !( mHash[0] == idString.mHash[0] && mHash[1] == idString.mHash[1] &&
+                                   strcmp( mDebugString, idString.mDebugString ) != 0 ) &&
+                                "Collision detected!" );
+            if( mHash[0] != idString.mHash[0] )
+                return mHash[0] < idString.mHash[0];
+            return mHash[1] < idString.mHash[1];
+#else
+            OGRE_ASSERT_MEDIUM(
+                !( mHash == idString.mHash && strcmp( mDebugString, idString.mDebugString ) != 0 ) &&
+                "Collision detected!" );
             return mHash < idString.mHash;
+#endif
         }
 
-        bool operator == ( IdString idString ) const
+        bool operator==( IdString idString ) const
         {
-#if OGRE_DEBUG_MODE
-            assert( !(mHash == idString.mHash &&
-                    strcmp( mDebugString, idString.mDebugString ) != 0) &&
-                    "Collision detected!" );
-#endif
+#ifdef OGRE_IDSTRING_USE_128
+            OGRE_ASSERT_MEDIUM( !( mHash[0] == idString.mHash[0] && mHash[1] == idString.mHash[1] &&
+                                   strcmp( mDebugString, idString.mDebugString ) != 0 ) &&
+                                "Collision detected!" );
+            return mHash[0] == idString.mHash[0] && mHash[1] == idString.mHash[1];
+#else
+            OGRE_ASSERT_MEDIUM(
+                !( mHash == idString.mHash && strcmp( mDebugString, idString.mDebugString ) != 0 ) &&
+                "Collision detected!" );
             return mHash == idString.mHash;
+#endif
         }
 
-        bool operator != ( IdString idString ) const
+        bool operator!=( IdString idString ) const
         {
-#if OGRE_DEBUG_MODE
-            assert( !(mHash == idString.mHash &&
-                    strcmp( mDebugString, idString.mDebugString ) != 0) &&
-                    "Collision detected!" );
-#endif
+#ifdef OGRE_IDSTRING_USE_128
+            OGRE_ASSERT_MEDIUM( !( mHash[0] == idString.mHash[0] && mHash[1] == idString.mHash[1] &&
+                                   strcmp( mDebugString, idString.mDebugString ) != 0 ) &&
+                                "Collision detected!" );
+            return mHash[0] != idString.mHash[0] || mHash[1] != idString.mHash[1];
+#else
+            OGRE_ASSERT_MEDIUM(
+                !( mHash == idString.mHash && strcmp( mDebugString, idString.mDebugString ) != 0 ) &&
+                "Collision detected!" );
             return mHash != idString.mHash;
+#endif
         }
 
         /// Returns "[Hash 0x0a0100ef]" strings in Release mode, readable string in debug
         std::string getFriendlyText() const
         {
-#if OGRE_DEBUG_MODE || OGRE_IDSTRING_ALWAYS_READABLE
+#if OGRE_DEBUG_MODE >= OGRE_DEBUG_MEDIUM || OGRE_IDSTRING_ALWAYS_READABLE
             return std::string( mDebugString );
 #else
             return getReleaseText();
@@ -266,19 +308,23 @@ namespace Ogre
         /// Always returns "[Hash 0x0a0100ef]" strings in any mode
         std::string getReleaseText() const
         {
-        #if OGRE_COMPILER == OGRE_COMPILER_MSVC
-            #pragma warning( push )
-            #pragma warning( disable: 4996 ) //Unsecure CRT deprecation warning
-        #endif
+#if OGRE_COMPILER == OGRE_COMPILER_MSVC
+#    pragma warning( push )
+#    pragma warning( disable : 4996 )  // Unsecure CRT deprecation warning
+#endif
 
-            char tmp[(OGRE_HASH_BITS >> 2)+10];
+            char tmp[( OGRE_HASH_BITS >> 2 ) + 10];
+#ifdef OGRE_IDSTRING_USE_128
+            sprintf( tmp, "[Hash 0x%.16" PRIx64 "%.16" PRIx64 "]", mHash[0], mHash[1] );
+#else
             sprintf( tmp, "[Hash 0x%.8x]", mHash );
-            tmp[(OGRE_HASH_BITS >> 2)+10-1] = '\0';
+#endif
+            tmp[( OGRE_HASH_BITS >> 2 ) + 10 - 1] = '\0';
             return std::string( tmp );
 
-        #if OGRE_COMPILER == OGRE_COMPILER_MSVC
-            #pragma warning( pop )
-        #endif
+#if OGRE_COMPILER == OGRE_COMPILER_MSVC
+#    pragma warning( pop )
+#endif
         }
 
         /** C String version. Zero allocations.
@@ -289,7 +335,7 @@ namespace Ogre
         */
         void getFriendlyText( char *outCStr, size_t stringSize ) const
         {
-#if OGRE_DEBUG_MODE || OGRE_IDSTRING_ALWAYS_READABLE
+#if OGRE_DEBUG_MODE >= OGRE_DEBUG_MEDIUM || OGRE_IDSTRING_ALWAYS_READABLE
             size_t minSize = std::min<size_t>( OGRE_DEBUG_STR_SIZE, stringSize );
             memcpy( outCStr, mDebugString, minSize );
             outCStr[minSize - 1u] = '\0';
@@ -301,36 +347,58 @@ namespace Ogre
         /// C String version. Zero allocations. See getFriendlyText.
         void getReleaseText( char *outCStr, size_t stringSize ) const
         {
-        #if OGRE_COMPILER == OGRE_COMPILER_MSVC
-            #pragma warning( push )
-            #pragma warning( disable: 4996 ) //Unsecure CRT deprecation warning
-        #endif
+#if OGRE_COMPILER == OGRE_COMPILER_MSVC
+#    pragma warning( push )
+#    pragma warning( disable : 4996 )  // Unsecure CRT deprecation warning
+#endif
 
-            if( stringSize < (OGRE_HASH_BITS >> 2u)+10u )
+            if( stringSize < ( OGRE_HASH_BITS >> 2u ) + 10u )
             {
-                //Not big enough. Use a temp buffer and then copy + truncate.
-                char tmp[(OGRE_HASH_BITS >> 2)+10];
+                // Not big enough. Use a temp buffer and then copy + truncate.
+                char tmp[( OGRE_HASH_BITS >> 2 ) + 10];
+#ifdef OGRE_IDSTRING_USE_128
+                sprintf( tmp, "[Hash 0x%.16" PRIx64 "%.16" PRIx64 "]", mHash[0], mHash[1] );
+#else
                 sprintf( tmp, "[Hash 0x%.8x]", mHash );
-                tmp[(OGRE_HASH_BITS >> 2)+10-1] = '\0';
+#endif
+                tmp[( OGRE_HASH_BITS >> 2 ) + 10 - 1] = '\0';
 
                 memcpy( outCStr, tmp, stringSize );
                 outCStr[stringSize - 1u] = '\0';
             }
             else
             {
-                //Write directly to the output buffer. It's big enough.
+// Write directly to the output buffer. It's big enough.
+#ifdef OGRE_IDSTRING_USE_128
+                sprintf( outCStr, "[Hash 0x%.16" PRIx64 "%.16" PRIx64 "]", mHash[0], mHash[1] );
+#else
                 sprintf( outCStr, "[Hash 0x%.8x]", mHash );
-                outCStr[(OGRE_HASH_BITS >> 2)+10-1] = '\0';
+#endif
+                outCStr[( OGRE_HASH_BITS >> 2 ) + 10 - 1] = '\0';
             }
 
-        #if OGRE_COMPILER == OGRE_COMPILER_MSVC
-            #pragma warning( pop )
-        #endif
+#if OGRE_COMPILER == OGRE_COMPILER_MSVC
+#    pragma warning( pop )
+#endif
+        }
+
+        /// Return a 32-bit value of the internal hash.
+        ///
+        /// Note: If hash size is higher than 32 bits; using this value
+        /// MIGHT still cause collisions that go undetected.
+        uint32 getU32Value() const
+        {
+#ifdef OGRE_IDSTRING_USE_128
+            uint64 reduced0 = mHash[0] ^ mHash[1];
+            uint32 reduced1 = static_cast<uint32>( ( reduced0 & 0xFFFFFFFFu ) ^ ( reduced0 >> 32u ) );
+            return reduced1;
+#else
+            return mHash;
+#endif
         }
     };
 
     typedef StdVector<IdString> IdStringVec;
-}
+}  // namespace Ogre
 
 #endif
-

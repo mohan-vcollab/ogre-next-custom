@@ -61,13 +61,13 @@ namespace Ogre
         TextureGpu *mNormalVox;
         TextureGpu *mAccumValVox;
 
-        RenderSystem *mRenderSystem;
-        VaoManager *mVaoManager;
-        HlmsManager *mHlmsManager;
+        RenderSystem      *mRenderSystem;
+        VaoManager        *mVaoManager;
+        HlmsManager       *mHlmsManager;
         TextureGpuManager *mTextureGpuManager;
 
         DebugVisualizationMode mDebugVisualizationMode;
-        VoxelVisualizer *mDebugVoxelVisualizer;
+        VoxelVisualizer       *mDebugVoxelVisualizer;
 
         uint32 mWidth;
         uint32 mHeight;
@@ -75,29 +75,29 @@ namespace Ogre
 
         Aabb mRegionToVoxelize;
 
-        virtual void destroyVoxelTextures( void );
-        void setTextureToDebugVisualizer( void );
+        virtual void destroyVoxelTextures();
+        void         setTextureToDebugVisualizer();
 
     public:
         VctVoxelizerSourceBase( IdType id, RenderSystem *renderSystem, HlmsManager *hlmsManager );
         virtual ~VctVoxelizerSourceBase();
 
         void setDebugVisualization( VctVoxelizerSourceBase::DebugVisualizationMode mode,
-                                    SceneManager *sceneManager );
-        VctVoxelizerSourceBase::DebugVisualizationMode getDebugVisualizationMode( void ) const;
+                                    SceneManager                                  *sceneManager );
+        VctVoxelizerSourceBase::DebugVisualizationMode getDebugVisualizationMode() const;
 
-        Vector3 getVoxelOrigin( void ) const;
-        Vector3 getVoxelCellSize( void ) const;
-        Vector3 getVoxelSize( void ) const;
-        Vector3 getVoxelResolution( void ) const;
+        Vector3 getVoxelOrigin() const;
+        Vector3 getVoxelCellSize() const;
+        Vector3 getVoxelSize() const;
+        Vector3 getVoxelResolution() const;
 
-        TextureGpu *getAlbedoVox( void ) { return mAlbedoVox; }
-        TextureGpu *getNormalVox( void ) { return mNormalVox; }
-        TextureGpu *getEmissiveVox( void ) { return mEmissiveVox; }
+        TextureGpu *getAlbedoVox() { return mAlbedoVox; }
+        TextureGpu *getNormalVox() { return mNormalVox; }
+        TextureGpu *getEmissiveVox() { return mEmissiveVox; }
 
-        TextureGpuManager *getTextureGpuManager( void );
-        RenderSystem *getRenderSystem( void );
-        HlmsManager *getHlmsManager( void );
+        TextureGpuManager *getTextureGpuManager();
+        RenderSystem      *getRenderSystem();
+        HlmsManager       *getHlmsManager();
     };
 }  // namespace Ogre
 

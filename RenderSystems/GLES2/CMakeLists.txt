@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------
-# This file is part of the CMake build system for OGRE
+# This file is part of the CMake build system for OGRE-Next
 #     (Object-oriented Graphics Rendering Engine)
 # For the latest info, see http://www.ogre3d.org/
 #
@@ -130,8 +130,8 @@ endif ()
 
 ogre_config_plugin(RenderSystem_GLES2)
 
-install(FILES ${HEADER_FILES} DESTINATION include/OGRE/RenderSystems/GLES2)
-install(FILES ${PLATFORM_HEADERS} DESTINATION include/OGRE/RenderSystems/GLES2/${PLATFORM_HEADER_INSTALL})
-install(FILES ${GLESW_HEADERS} DESTINATION include/OGRE/RenderSystems/GLES2/${GLESW_HEADER_INSTALL})
-install(FILES ${KHR_HEADERS} DESTINATION include/OGRE/RenderSystems/GLES2/KHR)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/GLSLES/include/ DESTINATION include/OGRE/RenderSystems/GLES2/GLSLES)
+install(FILES ${HEADER_FILES} DESTINATION include/${OGRE_NEXT_PREFIX}/RenderSystems/GLES2)
+install(FILES ${PLATFORM_HEADERS} DESTINATION include/${OGRE_NEXT_PREFIX}/RenderSystems/GLES2/${PLATFORM_HEADER_INSTALL})
+install(FILES ${GLESW_HEADERS} DESTINATION include/${OGRE_NEXT_PREFIX}/RenderSystems/GLES2/${GLESW_HEADER_INSTALL})
+install(FILES ${KHR_HEADERS} DESTINATION include/${OGRE_NEXT_PREFIX}/RenderSystems/GLES2/KHR)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/GLSLES/include/ DESTINATION include/${OGRE_NEXT_PREFIX}/RenderSystems/GLES2/GLSLES)

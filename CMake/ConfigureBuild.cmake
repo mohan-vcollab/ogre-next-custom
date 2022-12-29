@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------
-# This file is part of the CMake build system for OGRE
+# This file is part of the CMake build system for OGRE-Next
 #     (Object-oriented Graphics Rendering Engine)
 # For the latest info, see http://www.ogre3d.org/
 #
@@ -32,20 +32,6 @@ set(OGRE_THREAD_PROVIDER 0)
 if (OGRE_CONFIG_THREADS)
 	if (UNIX)
 		add_definitions(-pthread)
-	endif ()
-
-	if (OGRE_CONFIG_THREAD_PROVIDER STREQUAL "boost")
-		set(OGRE_THREAD_PROVIDER 1)
-		include_directories(${Boost_INCLUDE_DIRS})
-		# On MSVC Boost usually tries to autolink boost libraries. However since
-		# this behaviour is not available on all compilers, we need to find the libraries
-		# ourselves, anyway. Disable auto-linking to avoid mess-ups.
-		add_definitions(-DBOOST_ALL_NO_LIB)
-        if (MINGW AND Boost_USE_STATIC_LIBS)
-            # mingw needs this to link against static thread libraries
-            add_definitions(-DBOOST_THREAD_USE_LIB)
-        endif ()
-		set(OGRE_THREAD_LIBRARIES ${Boost_LIBRARIES})
 	endif ()
 
 	if (OGRE_CONFIG_THREAD_PROVIDER STREQUAL "poco")
@@ -106,16 +92,25 @@ set(OGRE_SET_RENDERDOC_INTEGRATION 0)
 set(OGRE_SET_DISABLE_TBB_SCHEDULER 0)
 set(OGRE_SET_DISABLE_FINE_LIGHT_MASK_GRANULARITY 0)
 set(OGRE_SET_ENABLE_LIGHT_OBB_RESTRAINT 0)
-set(RTSHADER_SYSTEM_BUILD_CORE_SHADERS 0)
-set(RTSHADER_SYSTEM_BUILD_EXT_SHADERS 0)
 set(OGRE_STATIC_LIB 0)
-set(OGRE_SET_USE_BOOST 0)
 set(OGRE_SET_PROFILING 0)
 set(OGRE_SET_PROFILING_EXHAUSTIVE 0)
 set(OGRE_SET_USE_SIMD 0)
 set(OGRE_SET_RESTRICT_ALIASING 0)
 set(OGRE_SET_IDSTRING_ALWAYS_READABLE 0)
 set(OGRE_SET_DISABLE_AMD_AGS 0)
+if((OGRE_EMBED_DEBUG_MODE STREQUAL "auto" AND
+		(CMAKE_GENERATOR STREQUAL "Unix Makefiles" OR CMAKE_GENERATOR STREQUAL "Ninja"))
+	OR OGRE_EMBED_DEBUG_MODE STREQUAL "always")
+  set( OGRE_SET_EMBED_DEBUG_MODE 1 )
+  if( OGRE_BUILD_TYPE STREQUAL "debug" )
+	set( OGRE_SET_DEBUG_MODE "OGRE_DEBUG_LEVEL_DEBUG" )
+  else()
+	set( OGRE_SET_DEBUG_MODE "OGRE_DEBUG_LEVEL_RELEASE" )
+  endif()
+else()
+  set( OGRE_SET_EMBED_DEBUG_MODE 0 )
+endif()
 if (OGRE_CONFIG_DOUBLE)
   set(OGRE_SET_DOUBLE 1)
 endif()
@@ -191,9 +186,6 @@ endif()
 if (OGRE_STATIC)
   set(OGRE_STATIC_LIB 1)
 endif()
-if (OGRE_USE_BOOST)
-  set(OGRE_SET_USE_BOOST 1)
-endif()
 if (OGRE_PROFILING_PROVIDER STREQUAL "internal")
   set(OGRE_SET_PROFILING 1)
 elseif (OGRE_PROFILING_PROVIDER STREQUAL "remotery")
@@ -223,18 +215,6 @@ else ()
   set(OGRE_CONFIG_LITTLE_ENDIAN 1)
 endif ()
 
-if (OGRE_BUILD_RTSHADERSYSTEM_CORE_SHADERS)
-	set(RTSHADER_SYSTEM_BUILD_CORE_SHADERS 1)
-else ()
-	set(RTSHADER_SYSTEM_BUILD_CORE_SHADERS 0)
-endif ()
-
-if (OGRE_BUILD_RTSHADERSYSTEM_EXT_SHADERS)
-	set(RTSHADER_SYSTEM_BUILD_EXT_SHADERS 1)
-else ()
-	set(RTSHADER_SYSTEM_BUILD_EXT_SHADERS 0)
-endif ()
-
 if (NOT OGRE_CONFIG_ENABLE_QUAD_BUFFER_STEREO)
   set(OGRE_SET_DISABLE_QUAD_BUFFER_STEREO 1)
 else ()
@@ -250,7 +230,7 @@ install( FILES
 	${OGRE_BINARY_DIR}/include/OgreBuildSettings.h
 	${OGRE_BINARY_DIR}/include/OgreGL3PlusBuildSettings.h
 	${OGRE_BINARY_DIR}/include/OgreVulkanBuildSettings.h
-	DESTINATION include/OGRE
+	DESTINATION include/${OGRE_NEXT_PREFIX}
 )
 
 
@@ -276,61 +256,48 @@ if (UNIX)
     set(OGRE_CFLAGS "-pthread")
     set(OGRE_ADDITIONAL_LIBS "${OGRE_ADDITIONAL_LIBS} -lpthread")
   endif ()
+
   if (OGRE_STATIC)
-    if (OGRE_CONFIG_THREADS)
-      set(OGRE_ADDITIONAL_LIBS "${OGRE_ADDITIONAL_LIBS} -lboost-thread-mt")
-    endif ()
     # there is no pkgconfig file for freeimage, so we need to add that lib manually
     set(OGRE_ADDITIONAL_LIBS "${OGRE_ADDITIONAL_LIBS} -lfreeimage")
-    configure_file(${OGRE_TEMPLATES_DIR}/OGREStatic.pc.in ${OGRE_BINARY_DIR}/pkgconfig/OGRE.pc @ONLY)
+    configure_file(${OGRE_TEMPLATES_DIR}/OGREStatic.pc.in ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}.pc @ONLY)
   else ()
-    configure_file(${OGRE_TEMPLATES_DIR}/OGRE.pc.in ${OGRE_BINARY_DIR}/pkgconfig/OGRE.pc @ONLY)
+    configure_file(${OGRE_TEMPLATES_DIR}/OGRE.pc.in ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}.pc @ONLY)
   endif ()
-  install(FILES ${OGRE_BINARY_DIR}/pkgconfig/OGRE.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
+  install(FILES ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
 
   # configure additional packages
 
+  message(STATUS "OGRE_PREFIX_PATH: ${OGRE_PREFIX_PATH}")
+
   if (OGRE_BUILD_COMPONENT_PAGING)
-    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-Paging.pc.in ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Paging.pc @ONLY)
-    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Paging.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
+    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-Paging.pc.in ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-Paging.pc @ONLY)
+    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-Paging.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
   endif ()
 
   if (OGRE_BUILD_COMPONENT_MESHLODGENERATOR)
-    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-MeshLodGenerator.pc.in ${OGRE_BINARY_DIR}/pkgconfig/OGRE-MeshLodGenerator.pc @ONLY)
-    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/OGRE-MeshLodGenerator.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
-  endif ()
-  
-  if (OGRE_BUILD_COMPONENT_TERRAIN)
-    if (OGRE_BUILD_COMPONENT_PAGING)
-      set(OGRE_PAGING_ADDITIONAL_PACKAGES ", OGRE-Paging = ${OGRE_VERSION}")
-    endif ()
-    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-Terrain.pc.in ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Terrain.pc @ONLY)
-    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Terrain.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
-  endif ()
-
-  if (OGRE_BUILD_COMPONENT_RTSHADERSYSTEM)
-    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-RTShaderSystem.pc.in ${OGRE_BINARY_DIR}/pkgconfig/OGRE-RTShaderSystem.pc @ONLY)
-    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/OGRE-RTShaderSystem.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
+    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-MeshLodGenerator.pc.in ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-MeshLodGenerator.pc @ONLY)
+    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-MeshLodGenerator.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
   endif ()
 
   if (OGRE_BUILD_COMPONENT_PROPERTY)
-    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-Property.pc.in ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Property.pc @ONLY)
-    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Property.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
+    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-Property.pc.in ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-Property.pc @ONLY)
+    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-Property.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
   endif ()
 
   if (OGRE_BUILD_COMPONENT_OVERLAY)
-    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-Overlay.pc.in ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Overlay.pc @ONLY)
-    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Overlay.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
+    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-Overlay.pc.in ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-Overlay.pc @ONLY)
+    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-Overlay.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
   endif ()
 
   if (OGRE_BUILD_COMPONENT_VOLUME)
-    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-Volume.pc.in ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Volume.pc @ONLY)
-    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Volume.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
+    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-Volume.pc.in ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-Volume.pc @ONLY)
+    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-Volume.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
   endif ()
 
-  if (OGRE_BUILD_COMPONENT_HLMS)
-    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-Hlms.pc.in ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Hlms.pc @ONLY)
-    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/OGRE-Hlms.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
+  if (OGRE_BUILD_COMPONENT_HLMS_PBS AND OGRE_BUILD_COMPONENT_HLMS_UNLIT)
+    configure_file(${OGRE_TEMPLATES_DIR}/OGRE-Hlms.pc.in ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-Hlms.pc @ONLY)
+    install(FILES ${OGRE_BINARY_DIR}/pkgconfig/${OGRE_NEXT_PREFIX}-Hlms.pc DESTINATION ${OGRE_LIB_DIRECTORY}/pkgconfig)
   endif ()
 
 endif ()

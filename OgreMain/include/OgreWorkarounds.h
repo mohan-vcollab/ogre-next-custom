@@ -39,28 +39,28 @@ namespace Ogre
 
 #ifdef OGRE_BUILD_RENDERSYSTEM_GLES2
 
-//PowerVR SGX 540 does not correctly transpose matrices in glProgramUniformMatrix4fvEXT,
-//so we have to do that manually (which is inconsistent with the way GL3+ works on desktop)
+// PowerVR SGX 540 does not correctly transpose matrices in glProgramUniformMatrix4fvEXT,
+// so we have to do that manually (which is inconsistent with the way GL3+ works on desktop)
 //
-//First seen: 2010-02-25 (probably, at least)
-//Last seen:  2014-05-30 on Samsung Galaxy Tab 2 (GT-P3110);
+// First seen: 2010-02-25 (probably, at least)
+// Last seen:  2014-05-30 on Samsung Galaxy Tab 2 (GT-P3110);
 //		Android 4.2.2 (Samsung officially discontinued updates for this device)
-//Additional Info:
+// Additional Info:
 //	https://twitter.com/KeepItFoolish/status/472456232738234368
-#define OGRE_GLES2_WORKAROUND_1		1
+#    define OGRE_GLES2_WORKAROUND_1 1
 
-//For some reason cubemapping in ES, the vector needs to be rotated 90° around the X axis.
-//May be it's a difference in the ES vs GL spec, or an Ogre bug when uploading the faces.
+// For some reason cubemapping in ES, the vector needs to be rotated 90° around the X axis.
+// May be it's a difference in the ES vs GL spec, or an Ogre bug when uploading the faces.
 //
-//First seen: ???
-//Last seen:  2014-08-19 on All devices
-#define OGRE_GLES2_WORKAROUND_2		1
+// First seen: ???
+// Last seen:  2014-08-19 on All devices
+#    define OGRE_GLES2_WORKAROUND_2 1
 
 #endif
 
 #ifdef OGRE_BUILD_RENDERSYSTEM_VULKAN
 
-#if OGRE_PLATFORM == OGRE_PLATFORM_ANDROID
+#    if OGRE_PLATFORM == OGRE_PLATFORM_ANDROID
 // Adreno 505, 506 and many others expose 64kb of UBO memory.
 // However binding exactly 65536 bytes of UBO memory causes the GPU to read all 0s.
 // We limit const buffer memory to 65472 bytes instead.
@@ -70,7 +70,7 @@ namespace Ogre
 //
 // First seen: Since the very first driver version
 // Last seen: 2020-09-08
-#define OGRE_VK_WORKAROUND_ADRENO_UBO64K
+#        define OGRE_VK_WORKAROUND_ADRENO_UBO64K
         static bool mAdrenoUbo64kLimitTriggered;
         /// If > 0, then the workaround is active
         /// The value contains the maximum range we will bind
@@ -83,7 +83,7 @@ namespace Ogre
 //
 // First seen: Since the very first driver version
 // Last seen: 2020-09-08
-#define OGRE_VK_WORKAROUND_ADRENO_D32_FLOAT
+#        define OGRE_VK_WORKAROUND_ADRENO_D32_FLOAT
         static bool mAdrenoD32FloatBug;
 
 // Adreno 5xx & 6xx series report the minimum features required by Vulkan.
@@ -97,7 +97,7 @@ namespace Ogre
 //
 // First seen: Since the very first driver version
 // Last seen: 2020-09-08
-#define OGRE_VK_WORKAROUND_ADRENO_5XX_6XX_MINCAPS
+#        define OGRE_VK_WORKAROUND_ADRENO_5XX_6XX_MINCAPS
         static bool mAdreno5xx6xxMinCaps;
 
 /// Adreno 505 incorrectly scales down non-square 3D textures (e.g. 128x128x32).
@@ -117,11 +117,45 @@ namespace Ogre
 ///
 /// First seen: Unknown
 /// Last seen: 2021-08-27
-#define OGRE_VK_WORKAROUND_BAD_3D_BLIT
+#        define OGRE_VK_WORKAROUND_BAD_3D_BLIT
         static bool mBad3DBlit;
-#endif
+
+/// Adreno 618 will experience a GPU crash when we send a vkCmdDrawIndirect
+/// with 1 command and that command has 0 vertices to render.
+/// Normal vkCmdDraw accepts 0 vertices fine.
+///
+/// Qualcomm has been notified of the bug; but this is likely a HW bug
+/// Adreno 640 doesn't exhibit this behavior (same driver version).
+///
+/// As of Driver 512.502.0 (Android 11), this bug is still present.
+///
+/// Given the little gains that indirect currently give, and indirect
+/// draw sounds like a pandora's box in Android; we force enable
+/// this workaround for all Android devices.
+///
+/// First seen: Unknown
+/// Last seen: 2022-04-20
+#        define OGRE_VK_WORKAROUND_ADRENO_618_0VERTEX_INDIRECT
+        static bool mAdreno618_0VertexIndirect;
+
+/// PowerVR 8xxx & 9xxx will raise a VK_ERROR_OUT_OF_DEVICE_MEMORY in
+/// vkQueueSubmit when vkCmdCopyBuffer srcOffset or dstOffset aren't
+/// multiple of 16 bytes.
+///
+/// Imagination has been notified of the bug and has helped us find it.
+///
+/// As of Driver 1.386.1368, API version 1.1.131 (Android 11),
+/// this bug is still present.
+///
+/// PowerVR has fixed this in driver version 1.426.234
+///
+/// First seen: Unknown
+/// Last seen: 2022-05-13
+#        define OGRE_VK_WORKAROUND_PVR_ALIGNMENT
+		static uint32 mPowerVRAlignment;
+#    endif
 #endif
     };
-}
+}  // namespace Ogre
 
 #endif

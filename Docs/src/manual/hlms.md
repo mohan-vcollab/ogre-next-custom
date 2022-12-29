@@ -40,7 +40,7 @@ thus it is now properly supported. As a result:
 
 ## A lot of data is stored in "Blocks" {#HlmsChangesBlocks}
 
-Described in detail in the [Blocks section](#9.3.Blocks|outline), many
+Described in detail in the [Blocks section](#HlmsBlocks), many
 parameters have been grouped into blocks. Changing depth checks means
 changing the whole Macroblock.
 
@@ -187,7 +187,15 @@ Technically on OpenGL render systems (GL3+, GLES2) you could `const_cast`
 the pointers, change the block's parameters (mind you, the pointer is
 shared by other datablocks, so you will be changing them as well as side
 effect) and it would probably work. But it will definitely fail on D3D11
-render system.
+render system.  
+
+Refer to the following pages for parameter references:
+- @subpage hlmsblendblockref
+- @subpage hlmspbsdatablockref
+- @subpage hlmsunlitdatablockref
+- @subpage hlmsterradatablockref
+- @subpage hlmsmacroblockref
+- @subpage hlmssamplerref
 
 ## Datablocks {#HlmsBlocksDatablocks}
 
@@ -327,7 +335,7 @@ case sensitive. The following keywords are recognized:
 ### \@property( expression ) {#HlmsPreprocessorSyntaxProperty}
 
 Checks whether the variables in the expression are true, if so, the text
-inside the block is printed. Must be finazlied with @end. The expression
+inside the block is printed. Must be finalized with \@end. The expression
 is case sensitive. When the variable hasn't been declared, it evaluates
 to false.
 
@@ -621,7 +629,7 @@ output showed the overriden `Hello` version.
 ### @pset padd psub pmul pdiv pmod pmin pmax {#HlmsPreprocessorSyntaxPsetEtc}
 
 Analogous to [the family of math functions without the 'p'
-prefix](#9.4.1.5.@set add sub mul div mod|outline). The difference is
+prefix](#9.4.1.5.\@set add sub mul div mod|outline). The difference is
 that the math is evaluated before anything else. There is no much use to
 these functions, probably except for quickly testing whether a given
 flag/variable is being properly set from C++ without having to
@@ -633,7 +641,7 @@ hlms_normal, 1 )`
 One important use worth mentioning, is that variables retain their
 values across shader stages. First the vertex shader template is parsed,
 then the pixel shader one. If 'myVal' is 0 and the vertex shader
-contains @counter( myVal ); when the pixel shader is parsed @value(
+contains \@counter( myVal ); when the pixel shader is parsed \@value(
 myVal ) will return 1, not 0.
 
 If you need to reset these variables across shader stages, you can use
@@ -713,7 +721,7 @@ more control but you'll have to do some of the work the base class does.
 For some particularly complex features, the Hlms preprocessor may not be
 enough, too difficult, or just impossible to implement, and thus you can
 generate the string from C++ and send it as a piece. The template shader
-can insert it using @insertpiece.
+can insert it using \@insertpiece.
 
 The function `Hlms::createShaderCacheEntry` is the main responsible for
 generating the shaders and parsing the template through the Hlms
@@ -759,7 +767,7 @@ shader will be created. However there are times where you want to use a
 template but only use this stage in particular scenarios (e.g. toggled
 by a material parameter, disable it for shadow mapping, etc.). In this
 case, set the property `hlms_disable_stage` to non-zero from within the
-template (i.e. using @set) . The value of this property is reset to 0
+template (i.e. using \@set) . The value of this property is reset to 0
 for every stage.
 
 Note that even when disabled, the Hlms template will be fully parsed and
@@ -838,6 +846,7 @@ customized:
 | custom_ps_posExecution       |  Executed after all code from the Pixel Shader has been performed.|
 | custom_ps_uv_modifier_macros |  PBS specific. Allows you to override the macros defined in Samples/Media/Hlms/Pbs/Any/UvModifierMacros_piece_ps.any so you can apply custom transformations to each UV. e.g. `#undef UV_DIFFUSE #define UV_DIFFUSE( x ) ((x) * 2.0)` |
 | custom_ps_functions          | Used to declare functions outside the main body of the shader |
+| custom_ps_pixelData          | Declare additional data in `struct PixelData` from Pixel Shader |
 
 # Run-time rendering {#HlmsRuntimeRendering}
 
@@ -1428,16 +1437,50 @@ mSceneManager->setShadowDirectionalLightExtrusionDistance( 500.0f );
 mSceneManager->setShadowFarDistance( 500.0f );
 ```
 
-3.  Try toggling `HlmsManager::setShadowMappingUseBackFaces`
-4.  The default shadow bias for every material is 0.01f. Perhaps this is
+3.  The default shadow bias for every material is 0.01f. Perhaps this is
     too much/little for you? Adjust it via
     `HlmsDatablock::mShadowConstantBias`.
-5.  Use `PF_FLOAT32_R` for rendering shadow maps until you get it to
+4.  Use `PF_FLOAT32_R` for rendering shadow maps until you get it to
     look correct. Then you can start worrying about lowering precision
     to get better performance.
-6.  Checkout the `Sample_ShadowMapDebugging` sample on how to debug
+5.  Checkout the `Sample_ShadowMapDebugging` sample on how to debug
     shadows. Those techniques may give you useful hints about what's
     going on.
 
 [^12]: GL3+ and GLES3: extension ARB\_sampler\_objects. D3D11:
     ID3D11SamplerState
+
+# Precision / Quality
+
+Ogre 2.4 added `Hlms::setPrecisionMode` with the following options:
+
+ - `PrecisionFull32`
+     - `midf` datatype maps to float (i.e. 32-bit)
+     - This setting is always supported
+ - `PrecisionMidf16`
+     - `midf` datatype maps to float16_t (i.e. forced 16-bit)
+     - It forces the driver to produce 16-bit code, even if unoptimal
+     - Great for testing quality downgrades caused by 16-bit support
+     - This depends on `RSC_SHADER_FLOAT16`
+     - If unsupported, we fallback to `PrecisionRelaxed`
+     - If unsupported, we then fallback to `PrecisionFull32`
+ - `PrecisionRelaxed`
+     - `midf` datatype maps to mediump float / min16float
+     - The driver is allowed to work in either 16-bit or 32-bit code
+     - This depends on `RSC_SHADER_RELAXED_FLOAT`
+     - If unsupported, we fallback to `PrecisionMidf16`
+     - If unsupported, we then fallback to `PrecisionFull32`
+
+We use the keyword "midf" because "half" is already taken on Metal.
+
+The default is `PrecisionFull32` which always works and ensures no quality problems.
+
+`PrecisionMidf16` & `PrecisionRelaxed` may need more testing but may help with either performance or battery usage in mobile at the cost of quality which may be unnoticeable on most cases.
+
+`PrecisionRelaxed` is supported by D3D11 however it's force-disabled because of fxc bugs.
+
+Only Vulkan and Metal can currently take advantage of these settings and is likely to stay that way.
+
+Support is very new: we've encountered various bugs (in drivers, in [spirv-reflect](https://github.com/KhronosGroup/SPIRV-Reflect/issues/134), in [fxc](https://twitter.com/matiasgoldberg/status/1485758709473189888), in [RenderDoc](https://github.com/baldurk/renderdoc/issues/2466)) **so users are advised to test this option thoroughly before deploying it to end users.**
+
+Metal is likely the API with best half 16-bit support at the moment.

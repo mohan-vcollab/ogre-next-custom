@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------
-# This file is part of the CMake build system for OGRE
+# This file is part of the CMake build system for OGRE-Next
 #     (Object-oriented Graphics Rendering Engine)
 # For the latest info, see http://www.ogre3d.org/
 #
@@ -17,7 +17,7 @@ if (WIN32)
 elseif (APPLE)
   set(OGRE_MEDIA_PATH "Media")
 elseif (UNIX)
-  set(OGRE_MEDIA_PATH "share/OGRE/Media")
+  set(OGRE_MEDIA_PATH "share/${OGRE_NEXT_PREFIX}/Media")
 endif ()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/

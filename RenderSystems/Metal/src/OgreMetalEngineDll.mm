@@ -1,6 +1,6 @@
 /*
   -----------------------------------------------------------------------------
-  This source file is part of OGRE
+  This source file is part of OGRE-Next
   (Object-oriented Graphics Rendering Engine)
   For the latest info, see http://www.ogre3d.org/
 
@@ -26,29 +26,26 @@ Copyright (c) 2000-2016 Torus Knot Software Ltd
   -----------------------------------------------------------------------------
 */
 
-#include "OgreRoot.h"
 #include "OgreMetalPlugin.h"
+
 #include "OgreMetalPrerequisites.h"
+#include "OgreRoot.h"
 
 #ifndef OGRE_STATIC_LIB
 
 namespace Ogre
 {
-	static MetalPlugin* plugin;
+    static MetalPlugin *plugin;
 
-#    if __cplusplus >= 201103L
     extern "C" void _OgreMetalExport dllStartPlugin( const NameValuePairList *options ) noexcept( false )
-#    else
-    extern "C" void _OgreMetalExport dllStartPlugin( const NameValuePairList *options ) throw( Exception )
-#    endif
     {
         plugin = OGRE_NEW MetalPlugin();
         Root::getSingleton().installPlugin( plugin, options );
     }
 
-	extern "C" void _OgreMetalExport dllStopPlugin(void)
+    extern "C" void _OgreMetalExport dllStopPlugin()
     {
-        Root::getSingleton().uninstallPlugin(plugin);
+        Root::getSingleton().uninstallPlugin( plugin );
         OGRE_DELETE plugin;
     }
 }

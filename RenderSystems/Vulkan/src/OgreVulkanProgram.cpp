@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -42,8 +42,15 @@ THE SOFTWARE.
 
 #include "OgreRenderSystemCapabilities.h"
 #include "OgreRoot.h"
-#include "OgreVulkanGlslangHeader.h"
 
+#if defined( __GNUC__ ) && !defined( __clang__ )
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wshadow"
+#endif
+#include "glslang/Public/ShaderLang.h"
+#if defined( __GNUC__ ) && !defined( __clang__ )
+#    pragma GCC diagnostic pop
+#endif
 #include "glslang/SPIRV/Logger.h"
 
 // Inclusion of SPIRV headers triggers lots of C++11 errors we don't care
@@ -139,7 +146,7 @@ namespace Ogre
     //---------------------------------------------------------------------------
     VulkanProgram::~VulkanProgram()
     {
-        // Have to call this here reather than in Resource destructor
+        // Have to call this here rather than in Resource destructor
         // since calling virtual methods in base destructors causes crash
         if( isLoaded() )
         {
@@ -151,7 +158,7 @@ namespace Ogre
         }
     }
     //-----------------------------------------------------------------------
-    uint32 VulkanProgram::getEshLanguage( void ) const
+    uint32 VulkanProgram::getEshLanguage() const
     {
         switch( mType )
         {
@@ -168,7 +175,7 @@ namespace Ogre
         return EShLangFragment;
     }
     //-----------------------------------------------------------------------
-    bool VulkanProgram::extractRootLayoutFromSource( void )
+    bool VulkanProgram::extractRootLayoutFromSource()
     {
         if( mRootLayout )
             return false;  // Programmatically specified
@@ -311,13 +318,13 @@ namespace Ogre
         resources.limits.generalConstantMatrixVectorIndexing = 1;
     }
     //-----------------------------------------------------------------------
-    void VulkanProgram::loadFromSource( void ) { compile( true ); }
+    void VulkanProgram::loadFromSource() { compile( true ); }
     //-----------------------------------------------------------------------
     /**
     @brief VulkanProgram::replaceVersionMacros
         Finds the first occurrence of "ogre_glsl_ver_xxx" and replaces it with "450"
     */
-    void VulkanProgram::replaceVersionMacros( void )
+    void VulkanProgram::replaceVersionMacros()
     {
         const String matchStr = "ogre_glsl_ver_";
         const size_t pos = mSource.find( matchStr );
@@ -461,7 +468,7 @@ namespace Ogre
         mRootLayout = vulkanProgramManager->getRootLayout( rootLayout );
     }
     //-----------------------------------------------------------------------
-    void VulkanProgram::unsetRootLayout( void )
+    void VulkanProgram::unsetRootLayout()
     {
         mRootLayout = 0;
         mReflectArrayRootLayouts = false;
@@ -538,12 +545,12 @@ namespace Ogre
         initGlslResources( resources );
 
         // Enable SPIR-V and Vulkan rules when parsing GLSL
-        EShMessages messages = ( EShMessages )( EShMsgDefault | EShMsgSpvRules | EShMsgVulkanRules );
+        EShMessages messages = (EShMessages)( EShMsgDefault | EShMsgSpvRules | EShMsgVulkanRules );
         if( mShaderSyntax == HLSL )
         {
             // glslang::EShTargetClientVersion VulkanClientVersion = glslang::EShTargetVulkan_1_0;
             // glslang::EShTargetLanguageVersion TargetVersion = glslang::EShTargetSpv_1_0;
-            messages = ( EShMessages )( EShMsgDefault | EShMsgSpvRules | EShMsgReadHlsl );
+            messages = (EShMessages)( EShMsgDefault | EShMsgSpvRules | EShMsgReadHlsl );
             shader.setEnvInput( glslang::EShSourceHlsl, stage, glslang::EShClientVulkan, 100 );
             // shader.setEnvClient( glslang::EShClientVulkan, VulkanClientVersion );
             // shader.setEnvTarget( glslang::EShTargetSpv, TargetVersion );
@@ -551,7 +558,7 @@ namespace Ogre
         }
 
 #if OGRE_DEBUG_MODE >= OGRE_DEBUG_HIGH
-        messages = ( EShMessages )( messages | EShMsgDebugInfo );
+        messages = (EShMessages)( messages | EShMsgDebugInfo );
 #endif
 
         const char *sourceCString = mSource.c_str();
@@ -710,9 +717,9 @@ namespace Ogre
         return mCompiled;
     }
     //-----------------------------------------------------------------------
-    void VulkanProgram::createLowLevelImpl( void )
+    void VulkanProgram::createLowLevelImpl()
     {
-        mAssemblerProgram = GpuProgramPtr( this, SPFM_NONE );
+        mAssemblerProgram = GpuProgramPtr( this, []( GpuProgram * ) {} );
         if( !mCompiled )
             compile( true );
     }
@@ -722,7 +729,7 @@ namespace Ogre
         // We didn't create mAssemblerProgram through a manager, so override this
         // implementation so that we don't try to remove it from one. Since getCreator()
         // is used, it might target a different matching handle!
-        mAssemblerProgram.setNull();
+        mAssemblerProgram.reset();
 
         unloadHighLevel();
 
@@ -730,7 +737,7 @@ namespace Ogre
             mRootLayout = 0;
     }
     //-----------------------------------------------------------------------
-    void VulkanProgram::unloadHighLevelImpl( void )
+    void VulkanProgram::unloadHighLevelImpl()
     {
         // Release everything
         mCompiled = false;
@@ -774,7 +781,7 @@ namespace Ogre
         return binding;
     }
     //-----------------------------------------------------------------------
-    void VulkanProgram::buildConstantDefinitions( void ) const
+    void VulkanProgram::buildConstantDefinitions() const
     {
         OgreProfileExhaustive( "VulkanProgram::buildConstantDefinitions" );
 
@@ -1035,9 +1042,9 @@ namespace Ogre
             mConstantDefs->map.insert( GpuConstantDefinitionMap::value_type( varName, def ) );
             vp->mConstantDefsSorted.push_back( def );
 
-            vp->mConstantsBytesToWrite =
-                std::max<uint32>( vp->mConstantsBytesToWrite,
-                                  def.logicalIndex + def.arraySize * def.elementSize * sizeof( float ) );
+            vp->mConstantsBytesToWrite = std::max<uint32>(
+                vp->mConstantsBytesToWrite,
+                uint32( def.logicalIndex + def.arraySize * def.elementSize * sizeof( float ) ) );
         }
 
         VulkanConstantDefinitionBindingParam bindingParam;
@@ -1295,7 +1302,7 @@ namespace Ogre
         pssCi.pName = "main";
     }
     //-----------------------------------------------------------------------
-    uint32 VulkanProgram::getBufferRequiredSize( void ) const { return mConstantsBytesToWrite; }
+    uint32 VulkanProgram::getBufferRequiredSize() const { return mConstantsBytesToWrite; }
     //-----------------------------------------------------------------------
     void VulkanProgram::updateBuffers( const GpuProgramParametersSharedPtr &params,
                                        uint8 *RESTRICT_ALIAS dstData )
@@ -1307,13 +1314,22 @@ namespace Ogre
         {
             const GpuConstantDefinition &def = *itor;
 
-            void *RESTRICT_ALIAS src;
+            void const *RESTRICT_ALIAS src;
             if( def.isFloat() )
-                src = (void *)&( *( params->getFloatConstantList().begin() + def.physicalIndex ) );
+            {
+                src = (void const *)&( *( params->getFloatConstantList().begin() +
+                                          static_cast<ptrdiff_t>( def.physicalIndex ) ) );
+            }
             else if( def.isUnsignedInt() )
-                src = (void *)&( *( params->getUnsignedIntConstantList().begin() + def.physicalIndex ) );
+            {
+                src = (void const *)&( *( params->getUnsignedIntConstantList().begin() +
+                                          static_cast<ptrdiff_t>( def.physicalIndex ) ) );
+            }
             else
-                src = (void *)&( *( params->getIntConstantList().begin() + def.physicalIndex ) );
+            {
+                src = (void const *)&( *( params->getIntConstantList().begin() +
+                                          static_cast<ptrdiff_t>( def.physicalIndex ) ) );
+            }
 
             memcpy( &dstData[def.logicalIndex], src, def.elementSize * def.arraySize * sizeof( float ) );
 
@@ -1445,19 +1461,19 @@ namespace Ogre
         }
     }
     //---------------------------------------------------------------------
-    inline bool VulkanProgram::getPassSurfaceAndLightStates( void ) const
+    inline bool VulkanProgram::getPassSurfaceAndLightStates() const
     {
         // Scenemanager should pass on light & material state to the rendersystem
         return true;
     }
     //---------------------------------------------------------------------
-    inline bool VulkanProgram::getPassTransformStates( void ) const
+    inline bool VulkanProgram::getPassTransformStates() const
     {
         // Scenemanager should pass on transform state to the rendersystem
         return true;
     }
     //---------------------------------------------------------------------
-    inline bool VulkanProgram::getPassFogStates( void ) const
+    inline bool VulkanProgram::getPassFogStates() const
     {
         // Scenemanager should pass on fog state to the rendersystem
         return true;
@@ -1473,13 +1489,13 @@ namespace Ogre
         static_cast<VulkanProgram *>( target )->setPreprocessorDefines( val );
     }
     //-----------------------------------------------------------------------
-    const String &VulkanProgram::getLanguage( void ) const
+    const String &VulkanProgram::getLanguage() const
     {
         static const String language = "glsl";
         return language;
     }
     //-----------------------------------------------------------------------
-    GpuProgramParametersSharedPtr VulkanProgram::createParameters( void )
+    GpuProgramParametersSharedPtr VulkanProgram::createParameters()
     {
         GpuProgramParametersSharedPtr params = HighLevelGpuProgram::createParameters();
         params->setTransposeMatrices( true );

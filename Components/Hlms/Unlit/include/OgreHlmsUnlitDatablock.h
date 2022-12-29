@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -34,7 +34,7 @@ THE SOFTWARE.
 #define OGRE_HLMS_TEXTURE_BASE_CLASS HlmsUnlitBaseTextureDatablock
 #define OGRE_HLMS_TEXTURE_BASE_MAX_TEX NUM_UNLIT_TEXTURE_TYPES
 #define OGRE_HLMS_CREATOR_CLASS HlmsUnlit
-    #include "OgreHlmsTextureBaseClass.h"
+#include "OgreHlmsTextureBaseClass.h"
 #undef _OgreHlmsTextureBaseClassExport
 #undef OGRE_HLMS_TEXTURE_BASE_CLASS
 #undef OGRE_HLMS_TEXTURE_BASE_MAX_TEX
@@ -47,17 +47,18 @@ THE SOFTWARE.
 namespace Ogre
 {
     /** \addtogroup Core
-    *  @{
-    */
+     *  @{
+     */
     /** \addtogroup Resources
-    *  @{
-    */
+     *  @{
+     */
 
     /** Contains information needed by PBS (Physically Based Shading) for OpenGL 3+ & D3D11+
-    */
+     */
     class _OgreHlmsUnlitExport HlmsUnlitDatablock : public HlmsUnlitBaseTextureDatablock
     {
         friend class HlmsUnlit;
+
     public:
         static const uint8 R_MASK;
         static const uint8 G_MASK;
@@ -67,42 +68,42 @@ namespace Ogre
         Matrix4 mTextureMatrices[NUM_UNLIT_TEXTURE_TYPES];
 
     protected:
-        uint8   mNumEnabledAnimationMatrices;
-        bool    mHasColour;         /// When false; mR, mG, mB & mA aren't passed to the pixel shader
-        float   mR, mG, mB, mA;
+        uint8 mNumEnabledAnimationMatrices;
+        bool  mHasColour;  ///< When false; mR, mG, mB & mA aren't passed to the pixel shader
+        float mR, mG, mB, mA;
 
-        uint8   mUvSource[NUM_UNLIT_TEXTURE_TYPES];
-        uint8   mBlendModes[NUM_UNLIT_TEXTURE_TYPES];
-        bool    mEnabledAnimationMatrices[NUM_UNLIT_TEXTURE_TYPES];
-        bool    mEnablePlanarReflection[NUM_UNLIT_TEXTURE_TYPES];
+        uint8 mUvSource[NUM_UNLIT_TEXTURE_TYPES];
+        uint8 mBlendModes[NUM_UNLIT_TEXTURE_TYPES];
+        bool  mEnabledAnimationMatrices[NUM_UNLIT_TEXTURE_TYPES];
+        bool  mEnablePlanarReflection[NUM_UNLIT_TEXTURE_TYPES];
 
-        uint8   mTextureSwizzles[NUM_UNLIT_TEXTURE_TYPES];
+        uint8 mTextureSwizzles[NUM_UNLIT_TEXTURE_TYPES];
 
-        virtual void cloneImpl( HlmsDatablock *datablock ) const;
+        void cloneImpl( HlmsDatablock *datablock ) const override;
 
-        virtual void uploadToConstBuffer( char *dstPtr, uint8 dirtyFlags );
-        virtual void uploadToExtraBuffer( char *dstPtr );
+        void uploadToConstBuffer( char *dstPtr, uint8 dirtyFlags ) override;
+        void uploadToExtraBuffer( char *dstPtr ) override;
 
     public:
         /** Valid parameters in params:
         @param params
-            * diffuse [r g b [a]]
+            + diffuse [r g b [a]]
                 If absent, the values of mR, mG, mB & mA will be ignored by the pixel shader.
                 When present, the rgba values can be specified.
                 Default: Absent
                 Default (when present): diffuse 1 1 1 1
 
-            * diffuse_map [texture name] [#uv]
+            + diffuse_map [texture name] [\#uv]
                 Name of the diffuse texture for the base image (optional, otherwise a dummy is set)
-                The #uv parameter is optional, and specifies the texcoord set that will
+                The \#uv parameter is optional, and specifies the texcoord set that will
                 be used. Valid range is [0; 8)
                 If the Renderable doesn't have enough UV texcoords, HLMS will throw an exception.
 
                 Note: The UV set is evaluated when creating the Renderable cache.
 
-            * diffuse_map1 [texture name] [blendmode] [#uv]
+            + diffuse_map1 [texture name] [blendmode] [\#uv]
                 Name of the diffuse texture that will be layered on top of the base image.
-                The #uv parameter is optional. Valid range is [0; 8)
+                The \#uv parameter is optional. Valid range is [0; 8)
                 The blendmode parameter is optional. Valid values are:
                     NormalNonPremul, NormalPremul, Add, Subtract, Multiply,
                     Multiply2x, Screen, Overlay, Lighten, Darken, GrainExtract,
@@ -113,19 +114,19 @@ namespace Ogre
                 Default uv:             0
                 Example: diffuse_map1 myTexture.png Add 3
 
-             * diffuse_map2 through diffuse_map16
+            + diffuse_map2 through diffuse_map16
                 Same as diffuse_map1 but for subsequent layers to be applied on top of the previous
                 images. You can't leave gaps (i.e. specify diffuse_map0 & diffuse_map2 but not
                 diffuse_map1).
                 Note that not all mobile HW supports 16 textures at the same time, thus we will
                 just cut/ignore the extra textures that won't fit (we log a warning though).
 
-             * animate <#tex_unit> [<#tex_unit> <#tex_unit> ... <#tex_unit>]
+            + animate <\#tex_unit> [<\#tex_unit> <\#tex_unit> ... <\#tex_unit>]
                 Enables texture animation through a 4x4 matrix for the specified textures.
                 Default: All texture animation/manipulation disabled.
                 Example: animate 0 1 2 3 4 14 15
 
-             * alpha_test [compare_func] [threshold]
+            + alpha_test [compare_func] [threshold]
                 When present, mAlphaTestThreshold is used.
                 compare_func is optional. Valid values are:
                     less, less_equal, equal, greater, greater_equal, not_equal
@@ -133,29 +134,27 @@ namespace Ogre
                 Default: alpha_test less 0.5
                 Example: alpha_test equal 0.1
         */
-        HlmsUnlitDatablock( IdString name, HlmsUnlit *creator,
-                            const HlmsMacroblock *macroblock,
-                            const HlmsBlendblock *blendblock,
-                            const HlmsParamVec &params );
-        virtual ~HlmsUnlitDatablock();
+        HlmsUnlitDatablock( IdString name, HlmsUnlit *creator, const HlmsMacroblock *macroblock,
+                            const HlmsBlendblock *blendblock, const HlmsParamVec &params );
+        ~HlmsUnlitDatablock() override;
 
-        /// Controls whether the value in @see setColour is used.
+        /// Controls whether the value in setColour() is used.
         /// Calling this function implies calling see HlmsDatablock::flushRenderables.
         void setUseColour( bool useColour );
 
         /// If this returns false, the values of mR, mG, mB & mA will be ignored.
         /// @see setUseColour.
-        bool hasColour(void) const                      { return mHasColour; }
+        bool hasColour() const { return mHasColour; }
 
         /// Sets a new colour value. Asserts if mHasColour is false.
         void setColour( const ColourValue &diffuse );
 
         /// Gets the current colour. The returned value is meaningless if mHasColour is false
-        ColourValue getColour(void) const               { return ColourValue( mR, mG, mB, mA ); }
+        ColourValue getColour() const { return ColourValue( mR, mG, mB, mA ); }
 
         using HlmsUnlitBaseTextureDatablock::setTexture;
 
-        void setTexture( uint8 texUnit, const String &name, const HlmsSamplerblock *refParams=0 );
+        void setTexture( uint8 texUnit, const String &name, const HlmsSamplerblock *refParams = 0 );
 
         /** Sets the final swizzle when sampling the given texture. e.g.
             calling setTextureSwizzle( 0, R_MASK, G_MASK, R_MASK, G_MASK );
@@ -187,7 +186,7 @@ namespace Ogre
         @param uvSet
             UV coordinate set. Value must be between in range [0; 8)
         */
-        void setTextureUvSource( uint8 sourceType, uint8 uvSet );
+        void  setTextureUvSource( uint8 sourceType, uint8 uvSet );
         uint8 getTextureUvSource( uint8 sourceType ) const;
 
         /** Sets the blending mode (how the texture unit gets layered
@@ -199,7 +198,7 @@ namespace Ogre
         @param blendMode
             The blending mode to use.
         */
-        void setBlendMode( uint8 texType, UnlitBlendModes blendMode );
+        void            setBlendMode( uint8 texType, UnlitBlendModes blendMode );
         UnlitBlendModes getBlendMode( uint8 texType ) const;
 
         /** Enables the animation of the given texture unit.
@@ -212,8 +211,8 @@ namespace Ogre
         void setEnableAnimationMatrix( uint8 textureUnit, bool bEnable );
         bool getEnableAnimationMatrix( uint8 textureUnit ) const;
 
-        void setAnimationMatrix( uint8 textureUnit, const Matrix4 &matrix );
-        const Matrix4 & getAnimationMatrix( uint8 textureUnit ) const;
+        void           setAnimationMatrix( uint8 textureUnit, const Matrix4 &matrix );
+        const Matrix4 &getAnimationMatrix( uint8 textureUnit ) const;
 
         /** Set to true if the texture at the given texture unit is a planar
             reflection texture. UVs will be ignored for that texture unit.
@@ -226,20 +225,23 @@ namespace Ogre
         void setEnablePlanarReflection( uint8 textureUnit, bool bEnable );
         bool getEnablePlanarReflection( uint8 textureUnit ) const;
 
-        virtual ColourValue getDiffuseColour(void) const;
-        virtual ColourValue getEmissiveColour(void) const;
-        virtual TextureGpu* getEmissiveTexture(void) const;
+        /// See HlmsUnlit::getDefaultGenerateMipmaps
+        bool getDefaultGenerateMipmaps() const;
 
-        virtual void calculateHash();
+        ColourValue getDiffuseColour() const override;
+        ColourValue getEmissiveColour() const override;
+        TextureGpu *getEmissiveTexture() const override;
 
-        static const size_t MaterialSizeInGpu;
-        static const size_t MaterialSizeInGpuAligned;
+        void calculateHash() override;
+
+        static const uint32 MaterialSizeInGpu;
+        static const uint32 MaterialSizeInGpuAligned;
     };
 
     /** @} */
     /** @} */
 
-}
+}  // namespace Ogre
 
 #include "OgreHeaderSuffix.h"
 

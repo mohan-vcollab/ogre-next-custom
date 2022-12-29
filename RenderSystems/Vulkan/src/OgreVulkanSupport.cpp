@@ -1,6 +1,6 @@
 /*
   -----------------------------------------------------------------------------
-  This source file is part of OGRE
+  This source file is part of OGRE-Next
   (Object-oriented Graphics Rendering Engine)
   For the latest info, see http://www.ogre3d.org
 
@@ -177,7 +177,7 @@ namespace Ogre
         }
     }
     //-------------------------------------------------------------------------
-    String VulkanSupport::validateConfigOptions( void )
+    String VulkanSupport::validateConfigOptions()
     {
         ConfigOptionMap::iterator it;
 
@@ -196,7 +196,7 @@ namespace Ogre
         return BLANKSTRING;
     }
     //-------------------------------------------------------------------------
-    uint32 VulkanSupport::getSelectedDeviceIdx( void ) const
+    uint32 VulkanSupport::getSelectedDeviceIdx() const
     {
         uint32 deviceIdx = 0u;
 
@@ -207,7 +207,7 @@ namespace Ogre
             FastArray<String>::const_iterator itDevice =
                 std::find( mDevices.begin(), mDevices.end(), deviceName );
             if( itDevice != mDevices.end() )
-                deviceIdx = itDevice - mDevices.begin();
+                deviceIdx = uint32( itDevice - mDevices.begin() );
         }
 
         return deviceIdx;

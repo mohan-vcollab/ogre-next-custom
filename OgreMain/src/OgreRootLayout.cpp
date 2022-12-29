@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -36,8 +36,23 @@ THE SOFTWARE.
 #include "OgreLwString.h"
 #include "OgreStringConverter.h"
 
+#if defined( __GNUC__ ) && !defined( __clang__ )
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
+#if defined( __clang__ )
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"
+#    pragma clang diagnostic ignored "-Wdeprecated-copy"
+#endif
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
+#if defined( __clang__ )
+#    pragma clang diagnostic pop
+#endif
+#if defined( __GNUC__ ) && !defined( __clang__ )
+#    pragma GCC diagnostic pop
+#endif
 
 #define TODO_limit_NUM_BIND_TEXTURES  // and co.
 
@@ -274,8 +289,7 @@ namespace Ogre
                               " specifies ", c_rootLayoutVarNames[i], " in range [",
                               mDescBindingRanges[j][i].start );
                     tmpStr.a( ", ", (uint32)mDescBindingRanges[j][i].end, ") but set ",
-                              ( uint32 )( j + 1u ), " is in range [",
-                              mDescBindingRanges[j + 1][i].start );
+                              (uint32)( j + 1u ), " is in range [", mDescBindingRanges[j + 1][i].start );
                     tmpStr.a( ", ", mDescBindingRanges[j + 1][i].end, ")" );
 
                     OGRE_EXCEPT( Exception::ERR_INVALIDPARAMS,
@@ -365,8 +379,8 @@ namespace Ogre
                                      "RootLayout::parseSet" );
                     }
 
-                    const size_t numStages = itor->value.Size();
-                    for( size_t j = 0u; j < numStages; ++j )
+                    const rapidjson::SizeType numStages = itor->value.Size();
+                    for( rapidjson::SizeType j = 0u; j < numStages; ++j )
                     {
                         if( itor->value[j].IsString() )
                         {
@@ -575,8 +589,8 @@ namespace Ogre
                     itor = descArrays.FindMember( c_rootLayoutVarNames[i] );
                     if( itor != descArrays.MemberEnd() && itor->value.IsArray() )
                     {
-                        const size_t numArrays = itor->value.Size();
-                        for( size_t j = 0u; j < numArrays; ++j )
+                        const rapidjson::SizeType numArrays = itor->value.Size();
+                        for( rapidjson::SizeType j = 0u; j < numArrays; ++j )
                         {
                             if( itor->value[j].IsArray() && itor->value[j].Size() == 2u &&
                                 itor->value[j][0].IsUint() && itor->value[j][1].IsUint() )
@@ -737,7 +751,7 @@ namespace Ogre
         flushLwString( jsonStr, outJson );
     }
     //-------------------------------------------------------------------------
-    size_t RootLayout::calculateNumUsedSets( void ) const
+    size_t RootLayout::calculateNumUsedSets() const
     {
         size_t numSets = 0u;
         for( size_t i = 0u; i < OGRE_MAX_NUM_BOUND_DESCRIPTOR_SETS; ++i )

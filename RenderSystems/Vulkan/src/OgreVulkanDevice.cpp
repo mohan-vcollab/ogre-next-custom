@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -76,7 +76,10 @@ namespace Ogre
         memset( &mDeviceMemoryProperties, 0, sizeof( mDeviceMemoryProperties ) );
 
         vkGetPhysicalDeviceMemoryProperties( mPhysicalDevice, &mDeviceMemoryProperties );
-        vkGetPhysicalDeviceFeatures( mPhysicalDevice, &mDeviceFeatures );
+
+        // mDeviceExtraFeatures gets initialized later, once we analyzed all the extensions
+        memset( &mDeviceExtraFeatures, 0, sizeof( mDeviceExtraFeatures ) );
+        fillDeviceFeatures();
 
         mSupportedStages = 0xFFFFFFFF;
         if( !mDeviceFeatures.geometryShader )
@@ -148,6 +151,44 @@ namespace Ogre
                 mDeviceExtensions.push_back( itor->extensionName );
                 ++itor;
             }
+
+            std::sort( mDeviceExtensions.begin(), mDeviceExtensions.end() );
+        }
+
+        // Initialize mDeviceExtraFeatures
+        if( hasInstanceExtension( VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME ) )
+        {
+            VkPhysicalDeviceFeatures2 deviceFeatures2;
+            makeVkStruct( deviceFeatures2, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 );
+            VkPhysicalDevice16BitStorageFeatures _16BitStorageFeatures;
+            makeVkStruct( _16BitStorageFeatures,
+                          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES );
+            VkPhysicalDeviceShaderFloat16Int8Features shaderFloat16Int8Features;
+            makeVkStruct( shaderFloat16Int8Features,
+                          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES );
+
+            PFN_vkGetPhysicalDeviceFeatures2KHR GetPhysicalDeviceFeatures2KHR =
+                (PFN_vkGetPhysicalDeviceFeatures2KHR)vkGetInstanceProcAddr(
+                    mInstance, "vkGetPhysicalDeviceFeatures2KHR" );
+
+            void **lastNext = &deviceFeatures2.pNext;
+
+            if( this->hasDeviceExtension( VK_KHR_16BIT_STORAGE_EXTENSION_NAME ) )
+            {
+                *lastNext = &_16BitStorageFeatures;
+                lastNext = &_16BitStorageFeatures.pNext;
+            }
+            if( this->hasDeviceExtension( VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME ) )
+            {
+                *lastNext = &shaderFloat16Int8Features;
+                lastNext = &shaderFloat16Int8Features.pNext;
+            }
+
+            GetPhysicalDeviceFeatures2KHR( mPhysicalDevice, &deviceFeatures2 );
+
+            mDeviceExtraFeatures.storageInputOutput16 = _16BitStorageFeatures.storageInputOutput16;
+            mDeviceExtraFeatures.shaderFloat16 = shaderFloat16Int8Features.shaderFloat16;
+            mDeviceExtraFeatures.shaderInt8 = shaderFloat16Int8Features.shaderInt8;
         }
 
         initUtils( mDevice );
@@ -168,6 +209,74 @@ namespace Ogre
             mDevice = 0;
             mPhysicalDevice = 0;
         }
+    }
+    //-------------------------------------------------------------------------
+    void VulkanDevice::fillDeviceFeatures()
+    {
+#define VK_DEVICEFEATURE_ENABLE_IF( x ) \
+    if( features.x ) \
+    mDeviceFeatures.x = features.x
+
+        VkPhysicalDeviceFeatures features;
+        vkGetPhysicalDeviceFeatures( mPhysicalDevice, &features );
+
+        // Don't opt in to features we don't want / need.
+        memset( &mDeviceFeatures, 0, sizeof( mDeviceFeatures ) );
+        // VK_DEVICEFEATURE_ENABLE_IF( robustBufferAccess );
+        VK_DEVICEFEATURE_ENABLE_IF( fullDrawIndexUint32 );
+        VK_DEVICEFEATURE_ENABLE_IF( imageCubeArray );
+        VK_DEVICEFEATURE_ENABLE_IF( independentBlend );
+        VK_DEVICEFEATURE_ENABLE_IF( geometryShader );
+        VK_DEVICEFEATURE_ENABLE_IF( tessellationShader );
+        VK_DEVICEFEATURE_ENABLE_IF( sampleRateShading );
+        VK_DEVICEFEATURE_ENABLE_IF( dualSrcBlend );
+        // VK_DEVICEFEATURE_ENABLE_IF( logicOp );
+        VK_DEVICEFEATURE_ENABLE_IF( multiDrawIndirect );
+        VK_DEVICEFEATURE_ENABLE_IF( drawIndirectFirstInstance );
+        VK_DEVICEFEATURE_ENABLE_IF( depthClamp );
+        VK_DEVICEFEATURE_ENABLE_IF( depthBiasClamp );
+        VK_DEVICEFEATURE_ENABLE_IF( fillModeNonSolid );
+        VK_DEVICEFEATURE_ENABLE_IF( depthBounds );
+        // VK_DEVICEFEATURE_ENABLE_IF( wideLines );
+        // VK_DEVICEFEATURE_ENABLE_IF( largePoints );
+        VK_DEVICEFEATURE_ENABLE_IF( alphaToOne );
+        VK_DEVICEFEATURE_ENABLE_IF( multiViewport );
+        VK_DEVICEFEATURE_ENABLE_IF( samplerAnisotropy );
+        VK_DEVICEFEATURE_ENABLE_IF( textureCompressionETC2 );
+        VK_DEVICEFEATURE_ENABLE_IF( textureCompressionASTC_LDR );
+        VK_DEVICEFEATURE_ENABLE_IF( textureCompressionBC );
+        // VK_DEVICEFEATURE_ENABLE_IF( occlusionQueryPrecise );
+        // VK_DEVICEFEATURE_ENABLE_IF( pipelineStatisticsQuery );
+        VK_DEVICEFEATURE_ENABLE_IF( vertexPipelineStoresAndAtomics );
+        VK_DEVICEFEATURE_ENABLE_IF( fragmentStoresAndAtomics );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderTessellationAndGeometryPointSize );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderImageGatherExtended );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderStorageImageExtendedFormats );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderStorageImageMultisample );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderStorageImageReadWithoutFormat );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderStorageImageWriteWithoutFormat );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderUniformBufferArrayDynamicIndexing );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderSampledImageArrayDynamicIndexing );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderStorageBufferArrayDynamicIndexing );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderStorageImageArrayDynamicIndexing );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderClipDistance );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderCullDistance );
+        // VK_DEVICEFEATURE_ENABLE_IF( shaderFloat64 );
+        // VK_DEVICEFEATURE_ENABLE_IF( shaderInt64 );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderInt16 );
+        // VK_DEVICEFEATURE_ENABLE_IF( shaderResourceResidency );
+        VK_DEVICEFEATURE_ENABLE_IF( shaderResourceMinLod );
+        // VK_DEVICEFEATURE_ENABLE_IF( sparseBinding );
+        // VK_DEVICEFEATURE_ENABLE_IF( sparseResidencyBuffer );
+        // VK_DEVICEFEATURE_ENABLE_IF( sparseResidencyImage2D );
+        // VK_DEVICEFEATURE_ENABLE_IF( sparseResidencyImage3D );
+        // VK_DEVICEFEATURE_ENABLE_IF( sparseResidency2Samples );
+        // VK_DEVICEFEATURE_ENABLE_IF( sparseResidency4Samples );
+        // VK_DEVICEFEATURE_ENABLE_IF( sparseResidency8Samples );
+        // VK_DEVICEFEATURE_ENABLE_IF( sparseResidency16Samples );
+        // VK_DEVICEFEATURE_ENABLE_IF( sparseResidencyAliased );
+        VK_DEVICEFEATURE_ENABLE_IF( variableMultisampleRate );
+        // VK_DEVICEFEATURE_ENABLE_IF( inheritedQueries );
     }
     //-------------------------------------------------------------------------
     void VulkanDevice::destroyQueues( FastArray<VulkanQueue> &queueArray )
@@ -311,7 +420,10 @@ namespace Ogre
         mPhysicalDevice = pd[deviceIdx];
 
         vkGetPhysicalDeviceMemoryProperties( mPhysicalDevice, &mDeviceMemoryProperties );
-        vkGetPhysicalDeviceFeatures( mPhysicalDevice, &mDeviceFeatures );
+
+        // mDeviceExtraFeatures gets initialized later, once we analyzed all the extensions
+        memset( &mDeviceExtraFeatures, 0, sizeof( mDeviceExtraFeatures ) );
+        fillDeviceFeatures();
 
         mSupportedStages = 0xFFFFFFFF;
         if( !mDeviceFeatures.geometryShader )
@@ -437,7 +549,10 @@ namespace Ogre
         createInfo.queueCreateInfoCount = static_cast<uint32>( queueCreateInfo.size() );
         createInfo.pQueueCreateInfos = &queueCreateInfo[0];
 
-        createInfo.pEnabledFeatures = &mDeviceFeatures;
+        if( hasInstanceExtension( VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME ) )
+            createInfo.pEnabledFeatures = nullptr;
+        else
+            createInfo.pEnabledFeatures = &mDeviceFeatures;
 
         {
             mDeviceExtensions.clear();
@@ -454,6 +569,46 @@ namespace Ogre
             }
 
             std::sort( mDeviceExtensions.begin(), mDeviceExtensions.end() );
+        }
+
+        // Declared at this scope because they must be alive for createInfo.pNext
+        VkPhysicalDeviceFeatures2 deviceFeatures2;
+        makeVkStruct( deviceFeatures2, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 );
+        VkPhysicalDevice16BitStorageFeatures _16BitStorageFeatures;
+        makeVkStruct( _16BitStorageFeatures, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES );
+        VkPhysicalDeviceShaderFloat16Int8Features shaderFloat16Int8Features;
+        makeVkStruct( shaderFloat16Int8Features,
+                      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES );
+
+        // Initialize mDeviceExtraFeatures
+        if( hasInstanceExtension( VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME ) )
+        {
+            PFN_vkGetPhysicalDeviceFeatures2KHR GetPhysicalDeviceFeatures2KHR =
+                (PFN_vkGetPhysicalDeviceFeatures2KHR)vkGetInstanceProcAddr(
+                    mInstance, "vkGetPhysicalDeviceFeatures2KHR" );
+
+            void **lastNext = &deviceFeatures2.pNext;
+
+            if( this->hasDeviceExtension( VK_KHR_16BIT_STORAGE_EXTENSION_NAME ) )
+            {
+                *lastNext = &_16BitStorageFeatures;
+                lastNext = &_16BitStorageFeatures.pNext;
+            }
+            if( this->hasDeviceExtension( VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME ) )
+            {
+                *lastNext = &shaderFloat16Int8Features;
+                lastNext = &shaderFloat16Int8Features.pNext;
+            }
+
+            // Send the same chain to vkCreateDevice
+            createInfo.pNext = &deviceFeatures2;
+
+            GetPhysicalDeviceFeatures2KHR( mPhysicalDevice, &deviceFeatures2 );
+            deviceFeatures2.features = mDeviceFeatures;
+
+            mDeviceExtraFeatures.storageInputOutput16 = _16BitStorageFeatures.storageInputOutput16;
+            mDeviceExtraFeatures.shaderFloat16 = shaderFloat16Int8Features.shaderFloat16;
+            mDeviceExtraFeatures.shaderInt8 = shaderFloat16Int8Features.shaderInt8;
         }
 
         VkResult result = vkCreateDevice( mPhysicalDevice, &createInfo, NULL, &mDevice );
@@ -476,7 +631,7 @@ namespace Ogre
         return itor != msInstanceExtensions.end() && *itor == extension;
     }
     //-------------------------------------------------------------------------
-    void VulkanDevice::initQueues( void )
+    void VulkanDevice::initQueues()
     {
         if( !mIsExternal )
         {
@@ -521,7 +676,7 @@ namespace Ogre
         mGraphicsQueue.commitAndNextCommandBuffer( submissionType );
     }
     //-------------------------------------------------------------------------
-    void VulkanDevice::stall( void )
+    void VulkanDevice::stall()
     {
         // We must flush the cmd buffer and our bindings because we take the
         // moment to delete all delayed buffers and API handles after a stall.

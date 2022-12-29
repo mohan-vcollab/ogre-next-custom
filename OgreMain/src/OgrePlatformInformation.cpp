@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include "OgreStableHeaders.h"
 
 #include "OgrePlatformInformation.h"
+
 #include "OgreLogManager.h"
 #include "OgreStringConverter.h"
 #include "OgreString.h"
@@ -37,7 +38,7 @@ THE SOFTWARE.
     #if _MSC_VER >= 1400
         #include <intrin.h>
     #endif
-#elif (OGRE_COMPILER == OGRE_COMPILER_GNUC || OGRE_COMPILER == OGRE_COMPILER_CLANG) && OGRE_PLATFORM != OGRE_PLATFORM_NACL
+#elif (OGRE_COMPILER == OGRE_COMPILER_GNUC || OGRE_COMPILER == OGRE_COMPILER_CLANG)
 #include <signal.h>
 #include <setjmp.h>
 #endif
@@ -83,7 +84,7 @@ namespace Ogre {
 
     //---------------------------------------------------------------------
     // Detect whether CPU supports CPUID instruction, returns non-zero if supported.
-    static int _isSupportCpuid(void)
+    static int _isSupportCpuid()
     {
 #if OGRE_COMPILER == OGRE_COMPILER_MSVC
         // Visual Studio 2005 & 64-bit compilers always supports __cpuid intrinsic
@@ -121,7 +122,7 @@ namespace Ogre {
             // Return values in eax, no return statement requirement here for VC.
         }
     #endif
-#elif (OGRE_COMPILER == OGRE_COMPILER_GNUC || OGRE_COMPILER == OGRE_COMPILER_CLANG) && OGRE_PLATFORM != OGRE_PLATFORM_NACL && OGRE_PLATFORM != OGRE_PLATFORM_EMSCRIPTEN
+#elif (OGRE_COMPILER == OGRE_COMPILER_GNUC || OGRE_COMPILER == OGRE_COMPILER_CLANG) && OGRE_PLATFORM != OGRE_PLATFORM_EMSCRIPTEN
         #if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64
            return true;
        #else
@@ -151,8 +152,10 @@ namespace Ogre {
 
     //---------------------------------------------------------------------
     // Performs CPUID instruction with 'query', fill the results, and return value of eax.
-    static uint _performCpuid(int query, CpuidResult& result)
+    static uint _performCpuid(uint32 _query, CpuidResult& result)
     {
+        int32 query;
+        memcpy( &query, &_query, sizeof( query ) );
 #if OGRE_COMPILER == OGRE_COMPILER_MSVC
     #if _MSC_VER >= 1400 
         int CPUInfo[4];
@@ -176,7 +179,7 @@ namespace Ogre {
             // Return values in eax, no return statement requirement here for VC.
         }
     #endif
-#elif (OGRE_COMPILER == OGRE_COMPILER_GNUC || OGRE_COMPILER == OGRE_COMPILER_CLANG) && OGRE_PLATFORM != OGRE_PLATFORM_NACL && OGRE_PLATFORM != OGRE_PLATFORM_EMSCRIPTEN
+#elif (OGRE_COMPILER == OGRE_COMPILER_GNUC || OGRE_COMPILER == OGRE_COMPILER_CLANG) && OGRE_PLATFORM != OGRE_PLATFORM_EMSCRIPTEN
         #if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64
         __asm__
         (
@@ -209,7 +212,7 @@ namespace Ogre {
 
     //---------------------------------------------------------------------
     // Detect whether or not os support Streaming SIMD Extension.
-#if (OGRE_COMPILER == OGRE_COMPILER_GNUC || OGRE_COMPILER == OGRE_COMPILER_CLANG) && OGRE_PLATFORM != OGRE_PLATFORM_NACL
+#if (OGRE_COMPILER == OGRE_COMPILER_GNUC || OGRE_COMPILER == OGRE_COMPILER_CLANG)
     #if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_32 && OGRE_CPU == OGRE_CPU_X86
     static jmp_buf sIllegalJmpBuf;
     static void _illegalHandler(int x)
@@ -219,7 +222,7 @@ namespace Ogre {
     }
     #endif
 #endif
-    static bool _checkOperatingSystemSupportSSE(void)
+    static bool _checkOperatingSystemSupportSSE()
     {
 #if OGRE_COMPILER == OGRE_COMPILER_MSVC
         /*
@@ -252,7 +255,7 @@ namespace Ogre {
             return false;
         }
     #endif
-#elif (OGRE_COMPILER == OGRE_COMPILER_GNUC || OGRE_COMPILER == OGRE_COMPILER_CLANG) && OGRE_PLATFORM != OGRE_PLATFORM_NACL && OGRE_PLATFORM != OGRE_PLATFORM_EMSCRIPTEN
+#elif (OGRE_COMPILER == OGRE_COMPILER_GNUC || OGRE_COMPILER == OGRE_COMPILER_CLANG) && OGRE_PLATFORM != OGRE_PLATFORM_EMSCRIPTEN
         #if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64 
             return true;
         #else
@@ -283,7 +286,7 @@ namespace Ogre {
     // Compiler-independent routines
     //---------------------------------------------------------------------
 
-    static uint queryCpuFeatures(void)
+    static uint queryCpuFeatures()
     {
 #define CPUID_STD_FPU               (1<<0)
 #define CPUID_STD_TSC               (1<<4)
@@ -299,9 +302,9 @@ namespace Ogre {
 #define CPUID_EXT_FAMILY_ID_MASK    0x0F00000   // EAX[23:20] - Bit 23 thru 20 contains extended family processor id
 #define CPUID_PENTIUM4_ID           0x0F00      // Pentium 4 family processor id
 
-#define CPUID_EXT_3DNOW             (1<<31)
-#define CPUID_EXT_AMD_3DNOWEXT      (1<<30)
-#define CPUID_EXT_AMD_MMXEXT        (1<<22)
+#define CPUID_EXT_3DNOW             (1u<<31u)
+#define CPUID_EXT_AMD_3DNOWEXT      (1u<<30u)
+#define CPUID_EXT_AMD_MMXEXT        (1u<<22u)
 
         uint features = 0;
 
@@ -390,7 +393,7 @@ namespace Ogre {
         return features;
     }
     //---------------------------------------------------------------------
-    static uint _detectCpuFeatures(void)
+    static uint _detectCpuFeatures()
     {
         uint features = queryCpuFeatures();
 
@@ -404,7 +407,7 @@ namespace Ogre {
         return features;
     }
     //---------------------------------------------------------------------
-    static String _detectCpuIdentifier(void)
+    static String _detectCpuIdentifier()
     {
         // Supports CPUID instruction ?
         if (_isSupportCpuid())
@@ -479,7 +482,7 @@ namespace Ogre {
 #elif OGRE_CPU == OGRE_CPU_ARM  // OGRE_CPU == OGRE_CPU_ARM
 
     //---------------------------------------------------------------------
-    static uint _detectCpuFeatures(void)
+    static uint _detectCpuFeatures()
     {
         // Use preprocessor definitions to determine architecture and CPU features
         uint features = 0;
@@ -504,7 +507,7 @@ namespace Ogre {
         return features;
     }
     //---------------------------------------------------------------------
-    static String _detectCpuIdentifier(void)
+    static String _detectCpuIdentifier()
     {
         String cpuID;
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE || OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS
@@ -536,22 +539,21 @@ namespace Ogre {
         unsigned arm64SubtypesCount = sizeof(arm64Subtypes) / sizeof(arm64Subtypes[0]);
         unsigned arm64_32SubtypesCount = sizeof(arm64_32Subtypes) / sizeof(arm64_32Subtypes[0]);
 
-        struct Helper{
-            static const char* getName(const char** names, unsigned count, unsigned idx){
-                return idx < count && names[idx] ? names[idx] : names[0];
-            }
+        auto getCpuName = [](const char** names, unsigned count, cpu_subtype_t cpusubtype){
+            unsigned idx = (unsigned)cpusubtype & ~CPU_SUBTYPE_MASK;
+            return idx < count && names[idx] ? names[idx] : names[0];
         };
 
         switch(cputype)
         {
             case CPU_TYPE_ARM:
-                cpuID = Helper::getName(armSubtypes, armSubtypesCount, cpusubtype);
+                cpuID = getCpuName(armSubtypes, armSubtypesCount, cpusubtype);
                 break;
             case CPU_TYPE_ARM64:
-                cpuID = Helper::getName(arm64Subtypes, arm64SubtypesCount, cpusubtype & ~CPU_SUBTYPE_MASK);
+                cpuID = getCpuName(arm64Subtypes, arm64SubtypesCount, cpusubtype);
                 break;
             case CPU_TYPE_ARM64_32:
-                cpuID = Helper::getName(arm64_32Subtypes, arm64_32SubtypesCount, cpusubtype & ~CPU_SUBTYPE_MASK);
+                cpuID = getCpuName(arm64_32Subtypes, arm64_32SubtypesCount, cpusubtype);
                 break;
             default:
                 cpuID = "Unknown ARM";
@@ -570,7 +572,7 @@ namespace Ogre {
 #elif OGRE_CPU == OGRE_CPU_MIPS  // OGRE_CPU == OGRE_CPU_ARM
 
     //---------------------------------------------------------------------
-    static uint _detectCpuFeatures(void)
+    static uint _detectCpuFeatures()
     {
         // Use preprocessor definitions to determine architecture and CPU features
         uint features = 0;
@@ -580,7 +582,7 @@ namespace Ogre {
         return features;
     }
     //---------------------------------------------------------------------
-    static String _detectCpuIdentifier(void)
+    static String _detectCpuIdentifier()
     {
 #if OGRE_ARCH_TYPE == OGRE_ARCHITECTURE_64
         String cpuID = "MIPS64";
@@ -594,7 +596,7 @@ namespace Ogre {
 #elif OGRE_CPU == OGRE_CPU_X86 && defined(__e2k__)  // MCST e2k (Elbrus 2000)
 
     //---------------------------------------------------------------------
-    static uint _detectCpuFeatures(void)
+    static uint _detectCpuFeatures()
     {
         // Use preprocessor definitions to determine architecture and CPU features
         uint features = 0;
@@ -626,7 +628,7 @@ namespace Ogre {
         return features;
     }
     //---------------------------------------------------------------------
-    static String _detectCpuIdentifier(void)
+    static String _detectCpuIdentifier()
     {
         String cpuID = __builtin_cpu_name();
 
@@ -634,7 +636,7 @@ namespace Ogre {
     }
     //---------------------------------------------------------------------
     // Added for compatibility with x86 architecture in void PlatformInformation::log(Log* pLog) section
-    static int _isSupportCpuid(void)
+    static int _isSupportCpuid()
     {
         return true;
     }
@@ -642,12 +644,12 @@ namespace Ogre {
 #else  // OGRE_CPU == OGRE_CPU_UNKNOWN
 
     //---------------------------------------------------------------------
-    static uint _detectCpuFeatures(void)
+    static uint _detectCpuFeatures()
     {
         return 0;
     }
     //---------------------------------------------------------------------
-    static String _detectCpuIdentifier(void)
+    static String _detectCpuIdentifier()
     {
         return "Unknown";
     }
@@ -655,12 +657,12 @@ namespace Ogre {
 #endif  // OGRE_CPU
 
     //---------------------------------------------------------------------
-    static uint32 _detectNumLogicalCores(void)
+    static uint32 _detectNumLogicalCores()
     {
         uint32 numLogicalCores = 0;
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_LINUX || OGRE_PLATFORM == OGRE_PLATFORM_ANDROID || OGRE_PLATFORM == OGRE_PLATFORM_FREEBSD
-        int logicalCores = (uint)sysconf( _SC_NPROCESSORS_ONLN );
+        int logicalCores = (int)sysconf( _SC_NPROCESSORS_ONLN );
 
         if( logicalCores > 0 )
             numLogicalCores = (uint32)logicalCores;
@@ -680,13 +682,13 @@ namespace Ogre {
     // Platform-independent routines, but the returns value are platform-dependent
     //---------------------------------------------------------------------
 
-    const String& PlatformInformation::getCpuIdentifier(void)
+    const String& PlatformInformation::getCpuIdentifier()
     {
         static const String sIdentifier = _detectCpuIdentifier();
         return sIdentifier;
     }
     //---------------------------------------------------------------------
-    uint PlatformInformation::getCpuFeatures(void)
+    uint PlatformInformation::getCpuFeatures()
     {
         static const uint sFeatures = _detectCpuFeatures();
         return sFeatures;
@@ -697,7 +699,7 @@ namespace Ogre {
         return (getCpuFeatures() & feature) != 0;
     }
     //---------------------------------------------------------------------
-    uint32 PlatformInformation::getNumLogicalCores(void)
+    uint32 PlatformInformation::getNumLogicalCores()
     {
         static const uint32 sNumCores = _detectNumLogicalCores();
         return sNumCores;

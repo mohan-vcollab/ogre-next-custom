@@ -61,27 +61,27 @@ namespace Demo
 
         void cycleCascade( bool bPrev );
         void cycleVisualizationMode( bool bPrev );
-        void toggletVctQuality( void );
-        GiMode getGiMode( void ) const;
+        void toggletVctQuality();
+        GiMode getGiMode() const;
         void cycleGiModes( bool bPrev );
 
         void cycleScenes( bool bPrev );
-        void destroyCurrentScene( void );
+        void destroyCurrentScene();
 
-        void createCornellScene( void );
-        void createSibenikScene( void );
-        void createStressScene( void );
+        void createCornellScene();
+        void createSibenikScene();
+        void createStressScene();
 
-        virtual void generateDebugText( float timeSinceLast, Ogre::String &outText );
+        void generateDebugText( float timeSinceLast, Ogre::String &outText ) override;
 
     public:
         ImageVoxelizerGameState( const Ogre::String &helpDescription );
 
-        virtual void createScene01( void );
-        virtual void destroyScene( void );
-        virtual void update( float timeSinceLast );
+        void createScene01() override;
+        void destroyScene() override;
+        void update( float timeSinceLast ) override;
 
-        virtual void keyReleased( const SDL_KeyboardEvent &arg );
+        void keyReleased( const SDL_KeyboardEvent &arg ) override;
     };
 }  // namespace Demo
 

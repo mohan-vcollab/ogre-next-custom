@@ -70,10 +70,10 @@ namespace Ogre
         struct Batch
         {
             FastArray<BatchInstances> instances;  // one per octant
-            FastArray<TextureGpu *> textures;
+            FastArray<TextureGpu *>   textures;
         };
 
-        typedef FastArray<Batch> BatchArray;
+        typedef FastArray<Batch>  BatchArray;
         typedef FastArray<Item *> ItemArray;
 
         VoxelizedMeshCache *mMeshCache;
@@ -88,10 +88,10 @@ namespace Ogre
         /// On other API/GPUs we may need to split the dispatch into multiple
         /// ones; the worst case scenario we'll have 1 batch per mesh in scene.
         BatchArray mBatches;
-        ItemArray mItems;
-        bool mItemOrderDirty;
+        ItemArray  mItems;
+        bool       mItemOrderDirty;
 
-        uint32 mTexMeshesPerBatch;  // 3 * meshes per batch
+        uint32          mTexMeshesPerBatch;  // 3 * meshes per batch
         HlmsComputeJob *mImageVoxelizerJob;
         HlmsComputeJob *mPartialClearJob;
 
@@ -109,10 +109,10 @@ namespace Ogre
         {
             uint32 x, y, z;
             uint32 width, height, depth;
-            Aabb region;
+            Aabb   region;
 
             float *RESTRICT_ALIAS instanceBuffer;  // Temporary
-            uint32 diffAxis;                       // Used in buildRelative
+            uint32                diffAxis;        // Used in buildRelative
         };
 
         FastArray<Octant> mOctants;
@@ -132,23 +132,24 @@ namespace Ogre
 
         ResourceTransitionArray mResourceTransitions;
 
-        void createComputeJobs( void );
-        void clearComputeJobResources( void );
+        void createComputeJobs();
+        void clearComputeJobResources();
 
     public:
         /// Swaps mAlbedoVox & mAlbedoVoxAlt (and co.) if needed back to their originals.
         /// This is needed during shutdown since VctLighting otherwise will try to remove
         /// itself as a listener from mAlbedoVoxAlt
-        void restoreSwappedVoxelTextures( void );
+        void restoreSwappedVoxelTextures();
 
     protected:
-        void createVoxelTextures( void );
-        void createAltVoxelTextures( void );
-        void setVoxelTexturesToJobs( void );
-        virtual void destroyVoxelTextures( void );
+        void createVoxelTextures();
+        void createAltVoxelTextures();
+        void setVoxelTexturesToJobs();
 
-        void createInstanceBuffers( void );
-        void destroyInstanceBuffers( void );
+        void destroyVoxelTextures() override;
+
+        void createInstanceBuffers();
+        void destroyInstanceBuffers();
         void fillInstanceBuffers( SceneManager *sceneManager );
 
         void clearVoxels( const bool bPartialClear );
@@ -158,7 +159,7 @@ namespace Ogre
     public:
         VctImageVoxelizer( IdType id, RenderSystem *renderSystem, HlmsManager *hlmsManager,
                            VoxelizedMeshCache *meshCache, bool correctAreaLightShadows );
-        virtual ~VctImageVoxelizer();
+        ~VctImageVoxelizer() override;
 
         /** Adds an item to voxelize.
         @param item
@@ -172,7 +173,7 @@ namespace Ogre
         void removeItem( Item *item );
 
         /// Removes all items added via VctImageVoxelizer::addItem
-        void removeAllItems( void );
+        void removeAllItems();
 
         /** Call this function before VctImageVoxelizer::autoCalculateRegion
         @param autoRegion
@@ -188,7 +189,7 @@ namespace Ogre
                                   const Aabb &maxRegion = Aabb::BOX_INFINITE );
 
         /// Does nothing if VctImageVoxelizer::setRegionToVoxelize( false, ... ) was called.
-        void autoCalculateRegion( void );
+        void autoCalculateRegion();
 
         void dividideOctants( uint32 numOctantsX, uint32 numOctantsY, uint32 numOctantsZ );
 
@@ -224,7 +225,7 @@ namespace Ogre
                             const int32 diffZ, const uint32 numOctantsX, const uint32 numOctantsY,
                             const uint32 numOctantsZ );
 
-        void forceFullBuild( void ) { mFullBuildDone = false; }
+        void forceFullBuild() { mFullBuildDone = false; }
     };
 }  // namespace Ogre
 

@@ -2,7 +2,7 @@
 @echo off
 SETLOCAL
 
-set OGRE_BRANCH_NAME=v2-3
+set OGRE_BRANCH_NAME=master
 set GENERATOR="Visual Studio 14 2015"
 set PLATFORM=Win32
 
@@ -44,7 +44,7 @@ echo --- Building ogre-next-deps ---
 
 cd ../../
 IF NOT EXIST ogre-next (
-	echo --- Cloning Ogre v2-3 ---
+	echo --- Cloning Ogre master ---
 	git clone --branch %OGRE_BRANCH_NAME% https://github.com/OGRECave/ogre-next
 )
 cd ogre-next
@@ -58,7 +58,7 @@ IF NOT EXIST Dependencies (
 mkdir build
 cd build
 echo --- Running CMake configure ---
-%CMAKE_BIN% -D OGRE_USE_BOOST=0 -D OGRE_CONFIG_THREAD_PROVIDER=0 -D OGRE_CONFIG_THREADS=0 -D OGRE_BUILD_COMPONENT_SCENE_FORMAT=1 -D OGRE_BUILD_SAMPLES2=1 -D OGRE_BUILD_TESTS=1 -D OGRE_DEPENDENCIES_DIR=..\..\ogre-next-deps\build\ogredeps -G %GENERATOR% -A %PLATFORM% ..
+%CMAKE_BIN% -D OGRE_CONFIG_THREAD_PROVIDER=0 -D OGRE_CONFIG_THREADS=0 -D OGRE_BUILD_COMPONENT_SCENE_FORMAT=1 -D OGRE_BUILD_SAMPLES2=1 -D OGRE_BUILD_TESTS=1 -D OGRE_DEPENDENCIES_DIR=..\..\ogre-next-deps\build\ogredeps -G %GENERATOR% -A %PLATFORM% ..
 echo --- Building Ogre (Debug) ---
 %CMAKE_BIN% --build . --config Debug
 %CMAKE_BIN% --build . --target install --config Debug

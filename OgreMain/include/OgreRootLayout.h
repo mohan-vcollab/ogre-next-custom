@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
     (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org/
 
@@ -55,9 +55,10 @@ namespace Ogre
         uint16 end;    // Exclusive
         DescBindingRange();
 
-        size_t getNumUsedSlots( void ) const { return end - start; }
-        bool isInUse( void ) const { return start < end; }
-        bool isValid( void ) const { return start <= end; }
+        uint32 getNumUsedSlots() const { return end - start; }
+
+        bool isInUse() const { return start < end; }
+        bool isValid() const { return start <= end; }
 
         bool isDirty( uint8 minDirtySlot ) const
         {
@@ -394,12 +395,12 @@ namespace Ogre
             }
 
             static ArrayDesc fromKey( uint32 x ) { return ArrayDesc( x >> 16u, x & 0x0000FFFFu ); }
-            uint32 toKey( void ) const { return uint32( bindingIdx << 16u ) | arraySize; }
+            uint32           toKey() const { return uint32( bindingIdx << 16u ) | arraySize; }
         };
 
-        bool mCompute;
-        uint8 mParamsBuffStages;
-        bool mBaked[OGRE_MAX_NUM_BOUND_DESCRIPTOR_SETS];
+        bool             mCompute;
+        uint8            mParamsBuffStages;
+        bool             mBaked[OGRE_MAX_NUM_BOUND_DESCRIPTOR_SETS];
         DescBindingRange mDescBindingRanges[OGRE_MAX_NUM_BOUND_DESCRIPTOR_SETS]
                                            [DescBindingTypes::NumDescBindingTypes];
 
@@ -414,7 +415,7 @@ namespace Ogre
 
         inline static void flushLwString( LwString &jsonStr, String &outJson );
 
-        size_t calculateNumUsedSets( void ) const;
+        size_t calculateNumUsedSets() const;
         size_t calculateNumBindings( const size_t setIdx ) const;
 
     public:

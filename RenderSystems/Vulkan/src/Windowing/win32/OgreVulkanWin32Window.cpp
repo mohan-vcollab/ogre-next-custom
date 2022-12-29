@@ -1,6 +1,6 @@
 /*
 -----------------------------------------------------------------------------
-This source file is part of OGRE
+This source file is part of OGRE-Next
 (Object-oriented Graphics Rendering Engine)
 For the latest info, see http://www.ogre3d.org
 
@@ -94,12 +94,12 @@ namespace Ogre
         mStencilBuffer = 0;
     }
     //-------------------------------------------------------------------------
-    const char *VulkanWin32Window::getRequiredExtensionName( void )
+    const char *VulkanWin32Window::getRequiredExtensionName()
     {
         return VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
     }
     //-------------------------------------------------------------------------
-    void VulkanWin32Window::updateWindowRect( void )
+    void VulkanWin32Window::updateWindowRect()
     {
         RECT rc;
         BOOL result;
@@ -307,8 +307,8 @@ namespace Ogre
             winHeight = mRequestedHeight;
             {
                 // Center window horizontally and/or vertically, on the right monitor.
-                uint32 screenw = ( uint32 )( monitorInfoEx.rcWork.right - monitorInfoEx.rcWork.left );
-                uint32 screenh = ( uint32 )( monitorInfoEx.rcWork.bottom - monitorInfoEx.rcWork.top );
+                uint32 screenw = (uint32)( monitorInfoEx.rcWork.right - monitorInfoEx.rcWork.left );
+                uint32 screenh = (uint32)( monitorInfoEx.rcWork.bottom - monitorInfoEx.rcWork.top );
                 uint32 outerw = ( winWidth < screenw ) ? winWidth : screenw;
                 uint32 outerh = ( winHeight < screenh ) ? winHeight : screenh;
                 if( left == INT_MAX )
@@ -559,7 +559,7 @@ namespace Ogre
 
         if( mDepthBuffer )
         {
-            mTexture->_setDepthBufferDefaults( DepthBuffer::POOL_NON_SHAREABLE, false,
+            mTexture->_setDepthBufferDefaults( DepthBuffer::NO_POOL_EXPLICIT_RTV, false,
                                                mDepthBuffer->getPixelFormat() );
         }
         else
@@ -722,7 +722,7 @@ namespace Ogre
         }
     }
     //-------------------------------------------------------------------------
-    void VulkanWin32Window::windowMovedOrResized( void )
+    void VulkanWin32Window::windowMovedOrResized()
     {
         if( !mHwnd || IsIconic( mHwnd ) )
             return;

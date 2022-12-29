@@ -9,6 +9,7 @@
 // See the next tutorials on how to handles all OSes and how to properly setup a robust render loop
 //---------------------------------------------------------------------------------------
 
+#include "OgreAbiUtils.h"
 #include "OgreArchiveManager.h"
 #include "OgreCamera.h"
 #include "OgreConfigFile.h"
@@ -31,7 +32,7 @@
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE
 #    include "OSX/macUtils.h"
 #endif
-static void registerHlms( void )
+static void registerHlms()
 {
     using namespace Ogre;
 
@@ -142,7 +143,7 @@ public:
     MyWindowEventListener() : mQuit( false ) {}
     virtual void windowClosed( Ogre::Window *rw ) { mQuit = true; }
 
-    bool getQuit( void ) const { return mQuit; }
+    bool getQuit() const { return mQuit; }
 };
 
 int main( int argc, const char *argv[] )
@@ -162,7 +163,9 @@ int main( int argc, const char *argv[] )
 #else
     const char *pluginsFile = 0;  // TODO
 #endif
-    Root *root = OGRE_NEW Root( pluginsFolder + pluginsFile,     //
+    const Ogre::AbiCookie abiCookie = Ogre::generateAbiCookie();
+    Root *root = OGRE_NEW Root( &abiCookie,                      //
+                                pluginsFolder + pluginsFile,     //
                                 writeAccessFolder + "ogre.cfg",  //
                                 writeAccessFolder + "Ogre.log" );
 

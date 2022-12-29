@@ -1,6 +1,6 @@
 /*
   -----------------------------------------------------------------------------
-  This source file is part of OGRE
+  This source file is part of OGRE-Next
   (Object-oriented Graphics Rendering Engine)
   For the latest info, see http://www.ogre3d.org/
 
@@ -37,92 +37,90 @@ namespace Ogre
     {
     public:
         // Constructor
-        GLES2DepthTexture( bool shareableDepthBuffer, ResourceManager* creator, const String& name,
-                             ResourceHandle handle, const String& group, bool isManual,
-                             ManualResourceLoader* loader, GLES2Support& support );
+        GLES2DepthTexture( bool shareableDepthBuffer, ResourceManager *creator, const String &name,
+                           ResourceHandle handle, const String &group, bool isManual,
+                           ManualResourceLoader *loader, GLES2Support &support );
 
         virtual ~GLES2DepthTexture();
 
         void _setGlTextureName( GLuint textureName );
 
-        bool getShareableDepthBuffer(void) const        { return mShareableDepthBuffer; }
+        bool getShareableDepthBuffer() const { return mShareableDepthBuffer; }
 
     protected:
         bool mShareableDepthBuffer;
 
         /// @copydoc Texture::createInternalResourcesImpl
-        virtual void createInternalResourcesImpl(void);
+        virtual void createInternalResourcesImpl();
         /// @copydoc Resource::freeInternalResourcesImpl
-        virtual void freeInternalResourcesImpl(void);
+        virtual void freeInternalResourcesImpl();
 
         /// @copydoc Resource::prepareImpl
-        virtual void prepareImpl(void);
+        virtual void prepareImpl();
         /// @copydoc Resource::unprepareImpl
-        virtual void unprepareImpl(void);
+        virtual void unprepareImpl();
         /// @copydoc Resource::loadImpl
-        virtual void loadImpl(void);
+        virtual void loadImpl();
 
         /// internal method, create GLES2HardwarePixelBuffers for every face and mipmap level.
         void _createSurfaceList();
 
-        virtual void _autogenerateMipmaps(void) {}
+        virtual void _autogenerateMipmaps() {}
     };
 
-namespace v1
-{
-    class _OgreGLES2Export GLES2DepthPixelBuffer : public HardwarePixelBuffer
+    namespace v1
     {
-    protected:
-        RenderTexture   *mDummyRenderTexture;
+        class _OgreGLES2Export GLES2DepthPixelBuffer : public HardwarePixelBuffer
+        {
+        protected:
+            RenderTexture *mDummyRenderTexture;
 
-        virtual PixelBox lockImpl( const Box &lockBox, LockOptions options );
-        virtual void unlockImpl(void);
+            virtual PixelBox lockImpl( const Box &lockBox, LockOptions options );
+            virtual void unlockImpl();
 
-        /// Notify HardwarePixelBuffer of destruction of render target.
-        virtual void _clearSliceRTT( size_t zoffset );
+            /// Notify HardwarePixelBuffer of destruction of render target.
+            virtual void _clearSliceRTT( size_t zoffset );
 
-    public:
-        GLES2DepthPixelBuffer( GLES2DepthTexture *parentTexture, const String &baseName,
-                                 uint32 width, uint32 height, uint32 depth, PixelFormat format );
-        virtual ~GLES2DepthPixelBuffer();
+        public:
+            GLES2DepthPixelBuffer( GLES2DepthTexture *parentTexture, const String &baseName,
+                                   uint32 width, uint32 height, uint32 depth, PixelFormat format );
+            virtual ~GLES2DepthPixelBuffer();
 
-        virtual void blitFromMemory( const PixelBox &src, const Box &dstBox );
-        virtual void blitToMemory( const Box &srcBox, const PixelBox &dst );
-        virtual RenderTexture* getRenderTarget( size_t slice=0 );
-    };
-}
+            virtual void blitFromMemory( const PixelBox &src, const Box &dstBox );
+            virtual void blitToMemory( const Box &srcBox, const PixelBox &dst );
+            virtual RenderTexture *getRenderTarget( size_t slice = 0 );
+        };
+    }  // namespace v1
 
-    class _OgreGLES2Export GLES2DepthTextureTarget : public RenderTexture //GLES2RenderTexture
+    class _OgreGLES2Export GLES2DepthTextureTarget : public RenderTexture  // GLES2RenderTexture
     {
         GLES2DepthTexture *mUltimateTextureOwner;
 
     public:
-        GLES2DepthTextureTarget( GLES2DepthTexture *ultimateTextureOwner,
-                                   const String &name, v1::HardwarePixelBuffer *buffer,
-                                   uint32 zoffset );
+        GLES2DepthTextureTarget( GLES2DepthTexture *ultimateTextureOwner, const String &name,
+                                 v1::HardwarePixelBuffer *buffer, uint32 zoffset );
         virtual ~GLES2DepthTextureTarget();
 
-        virtual bool requiresTextureFlipping(void) const        { return true; }
+        virtual bool requiresTextureFlipping() const { return true; }
 
-        /// @copydoc RenderTarget::getForceDisableColourWrites
-        virtual bool getForceDisableColourWrites(void) const    { return true; }
+        virtual bool getForceDisableColourWrites() const { return true; }
 
         /// Depth buffers never resolve; only colour buffers do. (we need mFsaaResolveDirty to be always
         /// true so that the proper path is taken in GLES2Texture::getGLID)
-        virtual void setFsaaResolveDirty(void)  {}
-        virtual void setFsaaResolved()          {}
+        virtual void setFsaaResolveDirty() {}
+        virtual void setFsaaResolved() {}
 
         virtual void setDepthBufferPool( uint16 poolId );
 
         /// Notifies the ultimate texture owner the buffer changed
         virtual bool attachDepthBuffer( DepthBuffer *depthBuffer, bool exactFormatMatch );
-        virtual void detachDepthBuffer(void);
+        virtual void detachDepthBuffer();
 
         virtual void getFormatsForPso( PixelFormat outFormats[OGRE_MAX_MULTIPLE_RENDER_TARGETS],
                                        bool outHwGamma[OGRE_MAX_MULTIPLE_RENDER_TARGETS] ) const;
 
-        void getCustomAttribute( const String& name, void* pData );
+        void getCustomAttribute( const String &name, void *pData );
     };
-}
+}  // namespace Ogre
 
 #endif
