@@ -204,6 +204,7 @@ namespace Ogre
     const IdString PbsProperty::BrdfDefault = IdString( "BRDF_Default" );
     const IdString PbsProperty::BrdfCookTorrance = IdString( "BRDF_CookTorrance" );
     const IdString PbsProperty::BrdfBlinnPhong = IdString( "BRDF_BlinnPhong" );
+    const IdString PbsProperty::FresnelHasDiffuse = IdString( "fresnel_has_diffuse" );
     const IdString PbsProperty::FresnelSeparateDiffuse = IdString( "fresnel_separate_diffuse" );
     const IdString PbsProperty::GgxHeightCorrelated = IdString( "GGX_height_correlated" );
     const IdString PbsProperty::ClearCoat = IdString( "clear_coat" );
@@ -323,6 +324,7 @@ namespace Ogre
         mUseObbRestraintAreaLtc( false ),
 #endif
         mUseLightBuffers( false ),
+        mDefaultBrdfWithDiffuseFresnel( false ),
         mShadowFilter( PCF_3x3 ),
         mEsmK( 600u ),
         mAmbientLightMode( AmbientAuto )
@@ -783,8 +785,12 @@ namespace Ogre
         else if( ( brdf & PbsBrdf::BRDF_MASK ) == PbsBrdf::BlinnPhong )
             setProperty( PbsProperty::BrdfBlinnPhong, 1 );
 
-        if( brdf & PbsBrdf::FLAG_SPERATE_DIFFUSE_FRESNEL )
-            setProperty( PbsProperty::FresnelSeparateDiffuse, 1 );
+        if( brdf & PbsBrdf::FLAG_HAS_DIFFUSE_FRESNEL )
+        {
+            setProperty( PbsProperty::FresnelHasDiffuse, 1 );
+            if( brdf & PbsBrdf::FLAG_SPERATE_DIFFUSE_FRESNEL )
+                setProperty( PbsProperty::FresnelSeparateDiffuse, 1 );
+        }
 
         if( brdf & PbsBrdf::FLAG_LEGACY_MATH )
             setProperty( PbsProperty::LegacyMathBrdf, 1 );
@@ -3835,7 +3841,13 @@ namespace Ogre
         mUseObbRestraintAreaLtc = areaLtc;
     }
 #endif
+    //-----------------------------------------------------------------------------------
     void HlmsPbs::setUseLightBuffers( bool b ) { mUseLightBuffers = b; }
+    //-----------------------------------------------------------------------------------
+    void HlmsPbs::setDefaultBrdfWithDiffuseFresnel( bool bDefaultToDiffuseFresnel )
+    {
+        mDefaultBrdfWithDiffuseFresnel = bDefaultToDiffuseFresnel;
+    }
 #if !OGRE_NO_JSON
     //-----------------------------------------------------------------------------------
     void HlmsPbs::_loadJson( const rapidjson::Value &jsonValue, const HlmsJson::NamedBlocks &blocks,
