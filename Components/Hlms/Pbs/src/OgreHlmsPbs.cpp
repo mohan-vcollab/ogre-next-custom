@@ -87,6 +87,7 @@ namespace Ogre
     const IdString PbsProperty::MaterialsPerBuffer = IdString( "materials_per_buffer" );
     const IdString PbsProperty::LowerGpuOverhead = IdString( "lower_gpu_overhead" );
     const IdString PbsProperty::DebugPssmSplits = IdString( "debug_pssm_splits" );
+    const IdString PbsProperty::IndustryCompatible = IdString( "industry_compatible" );
     const IdString PbsProperty::PerceptualRoughness = IdString( "perceptual_roughness" );
     const IdString PbsProperty::HasPlanarReflections = IdString( "has_planar_reflections" );
 
@@ -292,6 +293,7 @@ namespace Ogre
         mPlanarReflectionsSamplerblock( 0 ),
         mHasPlanarReflections( false ),
         mLastBoundPlanarReflection( 0u ),
+        mPlanarReflectionSlotIdx( 0u ),
 #endif
         mAreaLightMasks( 0 ),
         mAreaLightMasksSamplerblock( 0 ),
@@ -324,6 +326,7 @@ namespace Ogre
         mUseObbRestraintAreaLtc( false ),
 #endif
         mUseLightBuffers( false ),
+        mIndustryCompatible( false ),
         mDefaultBrdfWithDiffuseFresnel( false ),
         mShadowFilter( PCF_3x3 ),
         mEsmK( 600u ),
@@ -1568,6 +1571,8 @@ namespace Ogre
 
         if( !casterPass )
         {
+            if( mIndustryCompatible )
+                setProperty( PbsProperty::IndustryCompatible, 1 );
             if( mPerceptualRoughness )
                 setProperty( PbsProperty::PerceptualRoughness, 1 );
             if( mLightProfilesTexture )
@@ -2926,7 +2931,13 @@ namespace Ogre
 
 #ifdef OGRE_BUILD_COMPONENT_PLANAR_REFLECTIONS
             if( mHasPlanarReflections )
+            {
                 mTexUnitSlotStart += 1;
+
+                mPlanarReflectionSlotIdx = static_cast<uint8>(
+                    mTexUnitSlotStart - 1u -
+                    mListener->getNumExtraPassTextures( mSetProperties, casterPass ) );
+            }
 #endif
         }
 
@@ -3525,7 +3536,7 @@ namespace Ogre
                 const uint8 activeActorIdx = queuedRenderable.renderable->mCustomParameter & 0x7F;
                 TextureGpu *planarReflTex = mPlanarReflections->getTexture( activeActorIdx );
                 *commandBuffer->addCommand<CbTexture>() = CbTexture(
-                    uint16( mTexUnitSlotStart - 1u ), planarReflTex, mPlanarReflectionsSamplerblock );
+                    uint16( mPlanarReflectionSlotIdx ), planarReflTex, mPlanarReflectionsSamplerblock );
                 mLastBoundPlanarReflection = queuedRenderable.renderable->mCustomParameter;
             }
 #endif
@@ -3731,9 +3742,9 @@ namespace Ogre
             "brtfLutDfg.dds", GpuPageOutStrategy::Discard, TextureFlags::AutomaticBatching,
             TextureTypes::Type2D, ResourceGroupManager::AUTODETECT_RESOURCE_GROUP_NAME, 0, poolId );
 
-        ltcMat0->scheduleTransitionTo( GpuResidency::Resident );
-        ltcMat1->scheduleTransitionTo( GpuResidency::Resident );
-        brtfLut2->scheduleTransitionTo( GpuResidency::Resident );
+        ltcMat0->scheduleTransitionTo( GpuResidency::Resident, nullptr, false, true );
+        ltcMat1->scheduleTransitionTo( GpuResidency::Resident, nullptr, false, true );
+        brtfLut2->scheduleTransitionTo( GpuResidency::Resident, nullptr, false, true );
 
         ltcMat0->waitForMetadata();
         ltcMat1->waitForMetadata();
@@ -3847,6 +3858,11 @@ namespace Ogre
     void HlmsPbs::setDefaultBrdfWithDiffuseFresnel( bool bDefaultToDiffuseFresnel )
     {
         mDefaultBrdfWithDiffuseFresnel = bDefaultToDiffuseFresnel;
+    }
+    //-----------------------------------------------------------------------------------
+    void HlmsPbs::setIndustryCompatible( bool bIndustryCompatible )
+    {
+        mIndustryCompatible = bIndustryCompatible;
     }
 #if !OGRE_NO_JSON
     //-----------------------------------------------------------------------------------
